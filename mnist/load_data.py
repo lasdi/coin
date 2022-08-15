@@ -75,16 +75,4 @@ def load_data (config):
     X_test_lst = X_test_lst.astype(int)
     Y_test = Y_test.astype(int)
 
-    
-    # # Split data according to configuration
-    # X_val_lst = X_train_lst[0:N_VAL,:]
-    # Y_val = Y_train[0:N_VAL]
-    # n_train_a = len(Y_train)-N_VAL
-    # n_train_a = n_train_a if N_TRAIN==-1 else min(N_TRAIN, n_train_a)
-    # X_train_lst = X_train_lst[N_VAL:N_VAL+n_train_a,:]
-    # Y_train = Y_train[N_VAL:N_VAL+n_train_a]    
-    # n_test_a = len(Y_test) if N_TEST==-1 else min(N_TEST, len(Y_test))
-    # X_test_lst = X_test_lst[0:n_test_a,:]
-    # Y_test = Y_test[0:n_test_a]
-
     return X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test

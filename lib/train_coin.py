@@ -8,7 +8,7 @@ Created on Mon Apr  4 08:15:36 2022
 
 
 import sys
-sys.path.insert(0, './lib/')
+# sys.path.insert(0, './lib/')
 from wisard_tools import eval_predictions, write2file 
 import pickle
 import numpy as np
@@ -25,7 +25,7 @@ import shutil
 
 def train_coin(project_name, config):
 
-    sys.path.insert(0, './'+project_name)
+    # sys.path.insert(0, './'+project_name)
     from data_augment import gen_data, save_data
     
     SEED = config['SEED']

@@ -7,7 +7,7 @@ Created on Sat Sep 25 15:22:17 2021
 """
 
 import sys
-sys.path.insert(0, './lib/')
+# sys.path.insert(0, './lib/')
 import logicwisard as lwsd
 
 import pickle
@@ -23,7 +23,7 @@ from load_config import load_config
 
 def gen_logicwisard(project_name, config):
 
-    sys.path.insert(0, './'+project_name)
+    # sys.path.insert(0, './'+project_name)
     
     SEED = config['SEED']
     ADDRESS_SIZE = config['ADDRESS_SIZE']
@@ -159,6 +159,6 @@ if __name__ == "__main__":
         project_name = sys.argv[1]
     else:
         project_name = 'mnist'    
-    config = load_config('./'+project_name)    
+    config = load_config('./')    
     
     gen_logicwisard(project_name, config)

@@ -8,7 +8,7 @@ Created on Mon Apr  4 08:15:36 2022
 
 
 import sys
-sys.path.insert(0, './lib/')
+# sys.path.insert(0, './lib/')
 from wisard_tools import eval_predictions, write2file 
 import pickle
 import numpy as np
@@ -22,7 +22,7 @@ from multikernel import classify_mk
 
 def eval_ensemble (project_name, config):
 
-    sys.path.insert(0, './'+project_name)
+    # sys.path.insert(0, './'+project_name)
     SEED = config['SEED']
     DO_PLOTS = config['DO_PLOTS']
     DO_HAMMING = config['DO_HAMMING']
