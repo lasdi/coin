@@ -1,0 +1,2 @@
+# coin
+COmbinational Intelligent Networks
