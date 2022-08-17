@@ -8,7 +8,6 @@ Created on Mon Apr  4 08:15:36 2022
 
 
 import sys
-# sys.path.insert(0, './lib/')
 from wisard_tools import eval_predictions, write2file 
 import pickle
 import numpy as np
@@ -16,7 +15,6 @@ import matplotlib.pyplot as plt
 import os
 import time
 import datetime
-from load_config import load_config
 
 from multikernel import classify_mk
 
@@ -47,10 +45,10 @@ def eval_ensemble (project_name, config):
     from load_data import load_data   
     X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test = load_data(config)
     
-    write2file("Train set input: "+str(X_train_lst.shape))
-    write2file("Train set output: "+str(Y_train.shape))
-    write2file("Val set input: "+str(X_val_lst.shape))
-    write2file("Val set output: "+str(Y_val.shape))
+    # write2file("Train set input: "+str(X_train_lst.shape))
+    # write2file("Train set output: "+str(Y_train.shape))
+    # write2file("Val set input: "+str(X_val_lst.shape))
+    # write2file("Val set output: "+str(Y_val.shape))
     write2file("Test set input: "+str(X_test_lst.shape))
     write2file("Test set output: "+str(Y_test.shape))
 
@@ -88,13 +86,15 @@ def eval_ensemble (project_name, config):
     write2file(f'\n>>> Test set accuracy: {acc_test:.01%}') 
 
     write2file( "\n\n--- Ensembles evaluation executed in %.02f seconds ---" % (time.time() - start_time))   
-    os.system("mv ./log.txt "+out_dir+"/log_ensembles.txt") 
+    os.system("mv ./log.txt "+out_dir+"/log_ensemb_"+datetime_string+".txt") 
 
 if __name__ == "__main__":
+    sys.path.insert(0, '../lib/')
+    from load_config import load_config
     if len(sys.argv) > 1:
         project_name = sys.argv[1]
     else:
         project_name = 'mnist'    
-    config = load_config('./'+project_name)    
+    config = load_config('../'+project_name)  
     
     eval_ensemble(project_name, config)      

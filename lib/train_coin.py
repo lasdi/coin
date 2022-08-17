@@ -8,7 +8,6 @@ Created on Mon Apr  4 08:15:36 2022
 
 
 import sys
-# sys.path.insert(0, './lib/')
 from wisard_tools import eval_predictions, write2file 
 import pickle
 import numpy as np
@@ -19,8 +18,8 @@ import datetime
 from bnn_mlp import bnn_mlp, bnn_mlp_augment
 from keras.utils import np_utils
 from sklearn.metrics import accuracy_score
-
-from load_config import load_config
+import pandas as pd
+# from load_config import load_config
 import shutil
 
 def train_coin(project_name, config):
@@ -72,6 +71,9 @@ def train_coin(project_name, config):
     files_list = open(out_dir+'lw_lst.txt', 'r')
     filenames = files_list.readlines()
     
+    lw_accs = []
+    lw_minterms = []    
+    
     m=0
     for filename in filenames:
         filename = filename.replace('\n','')
@@ -90,7 +92,19 @@ def train_coin(project_name, config):
         # This line below shouldn't be needed but every second loop
         # it stores information from previous loop even if
         # the object is deleted. I may not know python enough.
-        mWisard.bc_encoded_rams = []    
+        mWisard.bc_encoded_rams = []
+        mWisard.model_bc = {}
+        mWisard.bc_total_minterms = 0
+        mWisard.bc_weights = 0  
+        minterms_cnt = mWisard.get_minterms_info()
+        write2file('\nNumber of minterms (hamm): '+str(minterms_cnt))        
+        lw_minterms.append(minterms_cnt)
+        
+        if DO_HAMMING:
+            write2file('\n>>> Generate hamming model...')
+            mWisard.gen_hamming_model()
+            mWisard.model = mWisard.model_hamm
+
         
         if DO_AUGMENTATION==False:            
             X_train_bc = mWisard.gen_bc_encode(X_train_lst, hamming=DO_HAMMING)
@@ -164,12 +178,13 @@ def train_coin(project_name, config):
         
         write2file('\n>>> Evaluating post-bc test set...')
         mWisard.create_model_from_bc (weights)
-        Y_test_pred = mWisard.classify(X_test_lst, hamming=False, bc=True)
+        Y_test_pred = mWisard.classify(X_test_lst, hamming=DO_HAMMING, bc=True)
         acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=DO_PLOTS)  
         write2file('>>> Post-BNN Test set accuracy: ' +str(acc_test)) 
-        acc_test2 = accuracy_score(Y_test, Y_test_pred)
-        write2file('>>> Post-BNN Test set accuracy2: ' +str(acc_test2))
+        # acc_test2 = accuracy_score(Y_test, Y_test_pred)
+        # write2file('>>> Post-BNN Test set accuracy2: ' +str(acc_test2))
         del X_test_bc    
+        lw_accs.append(acc_test)
         
         ################# Save results ##########################
         coin_filename = filename.replace('lw','coin')
@@ -186,15 +201,23 @@ def train_coin(project_name, config):
         m+=1
         if N_TRAIN_MODELS!=-1 and m>=N_TRAIN_MODELS:
             break
+    
+    df = pd.DataFrame()
+    df['n_minterms'] = lw_minterms
+    df['accuracies'] = lw_accs
+    df.to_csv(out_dir+"/res_coin_"+datetime_string+".csv")
+    
     write2file( "\n\n--- COIN training Executed in %.02f seconds ---" % (time.time() - start_time))   
-    os.system("mv ./log.txt "+out_dir+"/log_coin.txt")
+    os.system("mv ./log.txt "+out_dir+"/log_coin_"+datetime_string+".txt")
     
     
 if __name__ == "__main__":
+    sys.path.insert(0, '../lib/')
+    from load_config import load_config
     if len(sys.argv) > 1:
         project_name = sys.argv[1]
     else:
         project_name = 'mnist'    
-    config = load_config('./'+project_name)    
+    config = load_config('../'+project_name)    
     
     train_coin(project_name, config)

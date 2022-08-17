@@ -7,7 +7,6 @@ Created on Sat Sep 25 15:22:17 2021
 """
 
 import sys
-# sys.path.insert(0, './lib/')
 import logicwisard as lwsd
 
 import pickle
@@ -16,9 +15,8 @@ import matplotlib.pyplot as plt
 import os
 import time
 import datetime
+import pandas as pd
 from wisard_tools import eval_predictions, write2file 
-
-from load_config import load_config
 
 
 def gen_logicwisard(project_name, config):
@@ -148,17 +146,24 @@ def gen_logicwisard(project_name, config):
         with open(out_dir+'/lw_'+datetime_string+'_'+str(m)+'.pkl', 'wb') as outp:
             pickle.dump(lw_models[m], outp, pickle.HIGHEST_PROTOCOL)
     
+    df = pd.DataFrame()
+    df['n_minterms'] = lw_minterms
+    df['accuracies'] = lw_accs
+    df.to_csv(out_dir+"/res_lw_"+datetime_string+".csv")
+    
     write2file("\n Total # minterms: %d" %(total_minterms))
       
     write2file( "\n\n--- Executed in %.02f seconds ---" % (time.time() - start_time))    
-    os.system("mv ./log.txt "+out_dir+"/log_lwisard.txt")
+    os.system("mv ./log.txt "+out_dir+"/log_lw_"+datetime_string+".txt")
 
 
 if __name__ == "__main__":
+    sys.path.insert(0, '../lib/')
+    from load_config import load_config
     if len(sys.argv) > 1:
         project_name = sys.argv[1]
     else:
         project_name = 'mnist'    
-    config = load_config('./')    
+    config = load_config('../'+project_name)     
     
     gen_logicwisard(project_name, config)

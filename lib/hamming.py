@@ -14,7 +14,7 @@ def hamming_correction_sample (bits, address_size):
     bits_c = np.copy(bits)
     if (np.sum(bits_c)>0):
         # next_pwr2 = 2**(math.ceil(math.log(address_size, 2)))
-        next_pwr2 = 32
+        next_pwr2 = 16
         diff_b = next_pwr2-address_size
         bits_c = np.concatenate((np.zeros((diff_b), dtype=int), bits_c))
         correction = reduce(op.xor, [i for i, bit in enumerate(bits_c) if bit])

@@ -67,10 +67,10 @@ def classify_mk (models, X, Y_test, hamming=False, bc = False):
     for m in range(n_models):
         lw = models[m]
         
-        if hamming:
-            model_arg = lw.model_hamm
-        elif bc:
-            model_arg = lw.model_bc            
+        if bc:
+            model_arg = lw.model_bc   
+        elif hamming:
+            model_arg = lw.model_hamm         
         else:
             model_arg = lw.model
              

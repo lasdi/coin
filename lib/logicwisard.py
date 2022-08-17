@@ -88,10 +88,10 @@ class logicwisard:
         Y_pred : numpy array
             An int array whose values correspond to the classes indexes.
         """
-        if hamming:
-            model_arg = self.model_hamm
-        elif bc:
+        if bc:
             model_arg = self.model_bc
+        elif hamming:
+            model_arg = self.model_hamm
         else:
             model_arg = self.model
         
