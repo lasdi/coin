@@ -107,7 +107,16 @@ def wisard_eval_bc (X, model, mapping, classes, address_size, threshold=1, hammi
     X_mapped = X[:,mapping]
     epsilon = 1e-6
     bc_h = np.float32(np.sqrt(1.5 / (n_minterms + len(classes))))
-
+    
+    tau = np.zeros((len(classes)))
+    tau_inv = np.ones((len(classes)))
+    for c in range (len(classes)):
+        tau[c] = bc_weights[3][c] - (bc_weights[2][c]/(bc_weights[1][c]/np.sqrt(bc_weights[4][c])))
+        tau[c] = int((tau[c]+n_minterms)/2)
+        if (bc_weights[1][c]/np.sqrt(bc_weights[4][c]))<0:
+            tau_inv[c] = -1
+        
+        
     if hamming:
         X_mapped = hamming_correction(X_mapped, address_size)
     
@@ -124,13 +133,18 @@ def wisard_eval_bc (X, model, mapping, classes, address_size, threshold=1, hammi
             
         for c in range (len(classes)):
             scores[c] = discriminator_eval_bc(xti.astype(int), model[classes[c]], threshold)
-            # Batch normalization correction
-            scores[c] = bc_weights[1][c]*(bc_h*scores[c] - bc_weights[3][c])/np.sqrt(bc_weights[4][c] + epsilon) + bc_weights[2][c]
             
+            # Batch normalization correction 
+            # scores[c] = bc_weights[1][c]*(bc_h*scores[c] - bc_weights[3][c])/np.sqrt(bc_weights[4][c] + epsilon) + bc_weights[2][c]
+            
+            # Batch normalization correction (threshold from FINN)
+            scores[c] -= tau[c]
+            scores[c] *= tau_inv[c]
         ############################################        
         
         best_class = np.argmax(scores)    
         Y_pred.append(best_class)
+    
     
     
     return np.array(Y_pred)
