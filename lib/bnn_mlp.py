@@ -74,7 +74,7 @@ def bnn_mlp (config, X_train, y_train, X_test, y_test):
 
     model.add(BatchNormalization(epsilon=EPSILON, momentum=MOMENTUM, name='bn'))
     
-    model.summary()
+    # model.summary()
     
     opt = Adam(lr=LR_START) 
     model.compile(loss='squared_hinge', optimizer=opt, metrics=['acc'])
