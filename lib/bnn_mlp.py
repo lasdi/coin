@@ -82,7 +82,7 @@ def bnn_mlp (config, X_train, y_train, X_test, y_test):
     lr_scheduler = LearningRateScheduler(lambda e: LR_START * LR_DECAY ** e)
     history = model.fit(X_train, Y_train,
                         batch_size=BATCH_SIZE, epochs=N_TRAIN_EPOCHS,
-                        verbose=1, validation_data=(X_test, Y_test),
+                        verbose=0, validation_data=(X_test, Y_test),
                         callbacks=[lr_scheduler])
 
     return model, history
@@ -141,7 +141,7 @@ def bnn_mlp_augment (config, n_samples, input_shape, partition, labels):
                         # use_multiprocessing=True,
                         # workers=16,
                         epochs=N_TRAIN_EPOCHS,
-                        verbose=1, 
+                        verbose=0, 
                         callbacks=[lr_scheduler])
 
     return model, history
