@@ -17,24 +17,65 @@ import time
 import datetime
 import pandas as pd
 from wisard_tools import eval_predictions, write2file 
+import threading
 
-
-def gen_logicwisard(project_name, config):
-
-    # sys.path.insert(0, './'+project_name)
+# This is the training function to be called as a thread
+def train_thread(epoch,config,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test):
+    global bin_acc,bin_acc_test,bin_mem,bin_minterms,bin_models
     
-    SEED = config['SEED']
+    write2file('> Started model %d' %(epoch))
     ADDRESS_SIZE = config['ADDRESS_SIZE']
-    THERMO_RESOLUTION = config['THERMO_RESOLUTION']
     MIN_THRESHOLD = config['MIN_THRESHOLD']
     MAX_THRESHOLD = config['MAX_THRESHOLD']
     ACC_DELTA = config['ACC_DELTA']
     ACC_PATIENCE = config['ACC_PATIENCE']
+    CLASSES = config['CLASSES']
+
+       
+    # write2file('>>> Training Wisard...')
+    mWisard = lwsd.logicwisard(CLASSES, ADDRESS_SIZE, MIN_THRESHOLD, MAX_THRESHOLD)
+    mWisard.fit(X_train_lst, Y_train)
+    
+    # write2file('>>> Evaluate model...')
+    word_cnt, max_value = mWisard.get_mem_info()
+    Y_test_pred = mWisard.classify(X_test_lst)    
+    acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)       
+    # write2file('> Pre-bin Test ACC: %f / Number of words: %d ' % (acc_test, word_cnt))       
+    
+    ###### Binarization ######
+    # write2file('>>> Searching for binarization threshold...')
+    best_acc, best_threshold, best_cnt, max_acc, max_threshold, max_cnt = mWisard.find_threshold(X_val_lst, Y_val, ACC_DELTA, ACC_PATIENCE)
+    # write2file('Max results => acc: %f / threshold: %d / word_cnt: %d' % (max_acc, max_threshold, max_cnt))
+    # write2file('best results => acc: %f / threshold: %d / word_cnt: %d' % (best_acc, best_threshold, best_cnt))
+    
+    mWisard.binarize_model()
+    
+    Y_test_pred = mWisard.classify(X_test_lst)
+    acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)    
+    
+    word_cnt, max_value = mWisard.get_mem_info()
+    minterms_cnt = mWisard.get_minterms_info()
+    # write2file('> Post-bin test ACC: %f / Number of words: %d / Number of minterms: %d' % (acc_test, word_cnt, minterms_cnt))
+    
+    bin_acc[epoch] = max_acc
+    bin_acc_test[epoch] = acc_test
+    bin_mem[epoch] = word_cnt
+    bin_minterms[epoch] = minterms_cnt
+    bin_models[epoch] = mWisard
+    write2file('> Finished models %d' %(epoch))
+
+# The main callable function    
+def gen_logicwisard(project_name, config):
+    global bin_acc,bin_acc_test,bin_mem,bin_minterms,bin_models
+    # sys.path.insert(0, './'+project_name)
+    
+    SEED = config['SEED']
+    N_THREADS = config['N_THREADS']
+    ADDRESS_SIZE = config['ADDRESS_SIZE']
+    THERMO_RESOLUTION = config['THERMO_RESOLUTION']
     N_GEN_MODELS = config['N_GEN_MODELS']
     N_SEL_MODELS = config['N_SEL_MODELS']
-    DO_HAMMING = config['DO_HAMMING']
     SORT_MODELS_BY = config['SORT_MODELS_BY']
-    CLASSES = config['CLASSES']
     DO_PLOTS = config['DO_PLOTS']
     
     np.random.seed(SEED)
@@ -68,46 +109,26 @@ def gen_logicwisard(project_name, config):
     write2file("Test set input: "+str(X_test_lst.shape))
     write2file("Test set output: "+str(Y_test.shape))
     
-    bin_acc = []
-    bin_acc_test = []
-    bin_mem = []
-    bin_minterms = []
-    bin_models = []
+    bin_acc = [None]*N_GEN_MODELS
+    bin_acc_test = [None]*N_GEN_MODELS
+    bin_mem = [None]*N_GEN_MODELS
+    bin_minterms = [None]*N_GEN_MODELS
+    bin_models = [None]*N_GEN_MODELS
     
-    for epoch in range(N_GEN_MODELS):
-        write2file('>>>> EPOCH %d <<<<<' %(epoch))
         
-           
-        write2file('>>> Training Wisard...')
-        mWisard = lwsd.logicwisard(CLASSES, ADDRESS_SIZE, MIN_THRESHOLD, MAX_THRESHOLD)
-        mWisard.fit(X_train_lst, Y_train)
+    for epoch in range(0,N_GEN_MODELS, N_THREADS):
+        n_threads_r = min(N_THREADS, N_GEN_MODELS-epoch)
+        print('>>>> EPOCH %d - %d / %d <<<<<' %(epoch+1,epoch+n_threads_r, N_GEN_MODELS))
+        threads = []
+        for t in range(n_threads_r):
+            new_thread = threading.Thread(target=train_thread, args=(epoch+t,config,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test))
+            threads.append(new_thread)
+            new_thread.start()
         
-        write2file('>>> Evaluate model...')
-        word_cnt, max_value = mWisard.get_mem_info()
-        Y_test_pred = mWisard.classify(X_test_lst)    
-        acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)       
-        write2file('> Pre-bin Test ACC: %f / Number of words: %d ' % (acc_test, word_cnt))       
-        
-        ###### Binarization ######
-        write2file('>>> Searching for binarization threshold...')
-        best_acc, best_threshold, best_cnt, max_acc, max_threshold, max_cnt = mWisard.find_threshold(X_val_lst, Y_val, ACC_DELTA, ACC_PATIENCE)
-        # write2file('Max results => acc: %f / threshold: %d / word_cnt: %d' % (max_acc, max_threshold, max_cnt))
-        # write2file('best results => acc: %f / threshold: %d / word_cnt: %d' % (best_acc, best_threshold, best_cnt))
-        
-        mWisard.binarize_model()
-        
-        Y_test_pred = mWisard.classify(X_test_lst)
-        acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)    
-        
-        word_cnt, max_value = mWisard.get_mem_info()
-        minterms_cnt = mWisard.get_minterms_info()
-        write2file('> Post-bin test ACC: %f / Number of words: %d / Number of minterms: %d' % (acc_test, word_cnt, minterms_cnt))
-        
-        bin_acc.append(max_acc)
-        bin_acc_test.append(acc_test)
-        bin_mem.append(word_cnt)
-        bin_minterms.append(minterms_cnt)
-        bin_models.append(mWisard)
+        for t in range(n_threads_r):
+            threads[t].join()
+            
+    print('>>> Training completed.')             
      
     # Plot search Results
     if DO_PLOTS:
@@ -155,6 +176,7 @@ def gen_logicwisard(project_name, config):
       
     write2file( "\n\n--- Executed in %.02f seconds ---" % (time.time() - start_time))    
     os.system("mv ./log.txt "+out_dir+"/log_lw_"+datetime_string+".txt")
+    os.system("cp "+config['PROJ_DIR']+"/config.py "+out_dir+"/config_lw_"+datetime_string+".py")
 
 
 if __name__ == "__main__":

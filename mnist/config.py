@@ -9,7 +9,10 @@ example:
 #################### General ####################
 
 # For reproducibility
-SEED = 54 
+SEED = 32
+# Number of threads requested simultaneously. Used for both
+# LogicWiSARD and COIN training.
+N_THREADS = 5
 # Enables plots throughout trainings. Doing this for multiple
 # may be messy
 DO_PLOTS = False

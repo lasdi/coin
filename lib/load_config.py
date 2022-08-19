@@ -13,6 +13,7 @@ def load_config (data_path):
     import config
     parameters = { "PROJ_DIR": data_path, 
                    "SEED": config.SEED,
+                   "N_THREADS": config.N_THREADS,
                    "DO_PLOTS": config.DO_PLOTS,
                    "ADDRESS_SIZE": config.ADDRESS_SIZE,
                    "THERMO_RESOLUTION": config.THERMO_RESOLUTION,
