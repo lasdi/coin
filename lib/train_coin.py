@@ -37,7 +37,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     N_TRAIN = config['N_TRAIN']
     AUGMENT_RATIO = config['AUGMENT_RATIO']    
     
-    write2file('>>>> MODEL %d <<<<<' %(m))    
+    write2file('> Started model %d ' %(m))    
     
     with open(filename, 'rb') as inp:
         mWisard = pickle.load(inp)
@@ -57,11 +57,11 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     mWisard.bc_total_minterms = 0
     mWisard.bc_weights = 0  
     minterms_cnt = mWisard.get_minterms_info()
-    write2file('\nNumber of minterms: '+str(minterms_cnt))        
+    # write2file('\nNumber of minterms: '+str(minterms_cnt))        
     lw_minterms[m] = minterms_cnt
     
     if DO_HAMMING:
-        write2file('\n>>> Generate hamming model...')
+        # write2file('\n>>> Generate hamming model...')
         mWisard.gen_hamming_model()
         mWisard.model = mWisard.model_hamm
 
@@ -71,7 +71,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
         # X_val_bc = mWisard.gen_bc_encode(X_val_lst, hamming=DO_HAMMING)
         X_test_bc = mWisard.gen_bc_encode(X_test_lst, hamming=DO_HAMMING)
         
-        write2file(">>> Starting BNN training...")
+        # write2file(">>> Starting BNN training...")
         model_bc, history = bnn_mlp(config, X_train_bc, Y_train, X_test_bc, Y_test)
 
     else: # AUGMENTATION
@@ -85,13 +85,13 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
             os.mkdir("./data")
             
             n_augmented_samples = int(AUGMENT_RATIO*N_TRAIN)
-            print('> Generating and saving data...')
+            # print('> Generating and saving data...')
             train_ids, train_labels, n_total_samples, input_shape = gen_data (n_augmented_samples, BATCH_SIZE, THERMO_RESOLUTION, mWisard)
-            print('> Saving val data...')
+            # print('> Saving val data...')
             # train_ids, train_labels = save_data (X_train_lst, Y_train_augm, 'train')
             val_ids, val_labels = save_data (X_test_bc, Y_test, 'val')
         else:
-            print('> Loading generated data...')
+            # print('> Loading generated data...')
             with open('data/train_ids.pkl', 'rb') as inp:
                 train_ids = pickle.load(inp)        
             with open('data/train_labels.pkl', 'rb') as inp:
@@ -105,14 +105,14 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
             # xt = np.load('data/' + train_ids[0] + '.npy')
             # input_shape = len(xt)
     
-        print ('Number of generated samples: '+str(n_total_samples))
+        # print ('Number of generated samples: '+str(n_total_samples))
         partition = {}
         partition['train'] = train_ids
         partition['validation'] = val_ids
         labels = train_labels
         labels.update(val_labels)
         
-        print(">>> Starting BNN training...")
+        # print(">>> Starting BNN training...")
         model_bc, history = bnn_mlp_augment(config, n_total_samples, input_shape, partition, labels)
 
     
@@ -130,17 +130,17 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     
     model_bc.set_weights(weights)
     score = model_bc.evaluate(X_test_bc, Y_test_bc, verbose=1)
-    write2file('>>> BC clipped Test accuracy: ' +str(score[1]))
+    # write2file('>>> BC clipped Test accuracy: ' +str(score[1]))
     lw_accs_float[m] = score[1]
     # Y_test_bc_pred = model_bc.predict_on_batch(X_test_bc)
 
     ################## BC-Wisard ############################
     
-    write2file('\n>>> Evaluating post-bc test set...')
+    # write2file('\n>>> Evaluating post-bc test set...')
     mWisard.create_model_from_bc (weights)
     Y_test_pred = mWisard.classify(X_test_lst, hamming=DO_HAMMING, bc=True)
     acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=DO_PLOTS)  
-    write2file('>>> Post-BNN Test set accuracy: ' +str(acc_test)) 
+    # write2file('>>> Post-BNN Test set accuracy: ' +str(acc_test)) 
     # acc_test2 = accuracy_score(Y_test, Y_test_pred)
     # write2file('>>> Post-BNN Test set accuracy2: ' +str(acc_test2))
     del X_test_bc    
@@ -158,7 +158,8 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
         plt.plot(history.history['val_acc'],'r')
         plt.show()
             
-
+    write2file('> Finished model %d ' %(m))   
+    
 def train_coin(project_name, config):
 
     global lw_accs, lw_accs_float, lw_minterms
@@ -236,7 +237,7 @@ def train_coin(project_name, config):
     
     write2file( "\n\n--- COIN training Executed in %.02f seconds ---" % (time.time() - start_time))   
     os.system("mv ./log.txt "+out_dir+"/log_coin_"+datetime_string+".txt")
-    
+    os.system("cp "+config['PROJ_DIR']+"/config.py "+out_dir+"/config_coin_"+datetime_string+".py")
     
 if __name__ == "__main__":
     sys.path.insert(0, '../lib/')
