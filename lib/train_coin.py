@@ -17,7 +17,7 @@ import time
 import datetime
 from bnn_mlp import bnn_mlp, bnn_mlp_augment
 from keras.utils import np_utils
-from sklearn.metrics import accuracy_score
+# from sklearn.metrics import accuracy_score
 import pandas as pd
 # from load_config import load_config
 import shutil
