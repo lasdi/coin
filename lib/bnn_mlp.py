@@ -9,8 +9,6 @@ import numpy as np
 import os
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
-np.random.seed(896)  
-
 import tensorflow as tf
 import keras.backend as K
 from keras.datasets import mnist
@@ -52,7 +50,7 @@ def bnn_mlp (config, X_train, y_train, X_test, y_test):
     kernel_lr_multiplier = 'Glorot'
     USE_BIAS = False
 
-
+    VERBOSE = config['VERBOSE']
     N_TRAIN_EPOCHS = config['N_TRAIN_EPOCHS']    
     BATCH_SIZE = config['BATCH_SIZE']    
     LR_START = config['LR_START']
@@ -82,7 +80,7 @@ def bnn_mlp (config, X_train, y_train, X_test, y_test):
     lr_scheduler = LearningRateScheduler(lambda e: LR_START * LR_DECAY ** e)
     history = model.fit(X_train, Y_train,
                         batch_size=BATCH_SIZE, epochs=N_TRAIN_EPOCHS,
-                        verbose=0, validation_data=(X_test, Y_test),
+                        verbose=int(VERBOSE), validation_data=(X_test, Y_test),
                         callbacks=[lr_scheduler])
 
     return model, history
@@ -97,7 +95,7 @@ def bnn_mlp_augment (config, n_samples, input_shape, partition, labels):
     
     USE_BIAS = False
 
-
+    VERBOSE = config['VERBOSE']
     N_TRAIN_EPOCHS = config['N_TRAIN_EPOCHS']    
     BATCH_SIZE = config['BATCH_SIZE']    
     LR_START = config['LR_START']
@@ -141,7 +139,7 @@ def bnn_mlp_augment (config, n_samples, input_shape, partition, labels):
                         # use_multiprocessing=True,
                         # workers=16,
                         epochs=N_TRAIN_EPOCHS,
-                        verbose=0, 
+                        verbose=int(VERBOSE), 
                         callbacks=[lr_scheduler])
 
     return model, history

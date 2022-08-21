@@ -15,6 +15,7 @@ def load_config (data_path):
                    "SEED": config.SEED,
                    "N_THREADS": config.N_THREADS,
                    "DO_PLOTS": config.DO_PLOTS,
+                   "VERBOSE": config.VERBOSE,
                    "ADDRESS_SIZE": config.ADDRESS_SIZE,
                    "THERMO_RESOLUTION": config.THERMO_RESOLUTION,
                    "MIN_THRESHOLD": config.MIN_THRESHOLD,

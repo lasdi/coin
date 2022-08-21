@@ -26,9 +26,10 @@ import threading
 def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test):
        
     from data_augment import gen_data, save_data
-    global lw_accs, lw_accs_float, lw_minterms
+    global lw_accs, lw_accs_float, lw_minterms, lw_filenames
     
     DO_PLOTS = config['DO_PLOTS']
+    VERBOSE = config['VERBOSE']
     THERMO_RESOLUTION = config['THERMO_RESOLUTION']
     BATCH_SIZE = config['BATCH_SIZE']
     DO_HAMMING = config['DO_HAMMING']
@@ -129,7 +130,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
             weights[0][i,j] = 1 if weights[0][i,j] >= 0 else -1
     
     model_bc.set_weights(weights)
-    score = model_bc.evaluate(X_test_bc, Y_test_bc, verbose=1)
+    score = model_bc.evaluate(X_test_bc, Y_test_bc, verbose=int(VERBOSE))
     # write2file('>>> BC clipped Test accuracy: ' +str(score[1]))
     lw_accs_float[m] = score[1]
     # Y_test_bc_pred = model_bc.predict_on_batch(X_test_bc)
@@ -152,6 +153,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
         pickle.dump(mWisard, outp, pickle.HIGHEST_PROTOCOL)
     del mWisard
 
+    lw_filenames[m] = coin_filename
     if DO_PLOTS:
         plt.figure(0)
         plt.plot(history.history['acc'])
@@ -162,7 +164,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     
 def train_coin(project_name, config):
 
-    global lw_accs, lw_accs_float, lw_minterms
+    global lw_accs, lw_accs_float, lw_minterms, lw_filenames
     
     SEED = config['SEED']
     N_THREADS = config['N_THREADS']
@@ -210,7 +212,8 @@ def train_coin(project_name, config):
 
     lw_accs = [None]*n_lw_models
     lw_accs_float = [None]*n_lw_models
-    lw_minterms = [None]*n_lw_models   
+    lw_minterms = [None]*n_lw_models  
+    lw_filenames = [None]*n_lw_models  
     
     for model_i in range(0,n_lw_models, N_THREADS):
       n_threads_r = min(N_THREADS, n_lw_models-model_i)
@@ -230,6 +233,7 @@ def train_coin(project_name, config):
   
     
     df = pd.DataFrame()
+    df['filename'] = lw_filenames
     df['n_minterms'] = lw_minterms
     df['acc_float'] = lw_accs_float
     df['acc_fixed'] = lw_accs
@@ -247,5 +251,6 @@ if __name__ == "__main__":
     else:
         project_name = 'mnist'    
     config = load_config('../'+project_name)    
+    np.random.seed(config['SEED'])
     
     train_coin(project_name, config)

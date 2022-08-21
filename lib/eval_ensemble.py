@@ -20,13 +20,9 @@ from multikernel import classify_mk
 
 def eval_ensemble (project_name, config):
 
-    # sys.path.insert(0, './'+project_name)
-    SEED = config['SEED']
     DO_PLOTS = config['DO_PLOTS']
     DO_HAMMING = config['DO_HAMMING']
     CLASSES = config['CLASSES']
-
-    np.random.seed(SEED)
     
     out_dir = config['PROJ_DIR']+'/out/'
     
@@ -36,7 +32,7 @@ def eval_ensemble (project_name, config):
         pass
     
     start_time = time.time()
-    full_log = "--- RUNNING COIN TRAINING: "+project_name+" ---\n"
+    full_log = "--- EVAL COIN ENSEMBLE: "+project_name+" ---\n"
     full_log += "\n> seed = " + str(SEED) 
     datetime_string = datetime.datetime.fromtimestamp(start_time).strftime('%Y-%m-%d_%H-%M-%S')
     full_log += "\nStarting at: "+datetime_string+"\n"
@@ -96,5 +92,6 @@ if __name__ == "__main__":
     else:
         project_name = 'mnist'    
     config = load_config('../'+project_name)  
+    np.random.seed(config['SEED'])
     
     eval_ensemble(project_name, config)      

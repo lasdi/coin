@@ -16,24 +16,26 @@ N_THREADS = 5
 # Enables plots throughout trainings. Doing this for multiple
 # may be messy
 DO_PLOTS = False
-# Classes for the application. Didn't test other than numbers
+# Enables verbose throughout scripts
+VERBOSE = False
+# Application classes. Didn't test anything other than numbers
 CLASSES = ['0','1','2','3','4','5','6','7','8','9']
 # Number of samples available for training. It can be reduced
 # for speed. 
-N_TRAIN = 600
+N_TRAIN = 60000
 # Number of samples to be used in validation during LogicWiSARD
 # generation only. This will be taken from the train set defined
 # above. For ex., if N_TRAIN=60000 and N_VAL=5000, then 55000
 # samples will be used to train LogicWiSARD and 5000 for threshold
 # search. In this case, BNN training will used the whole 60000 set
 # for training.
-N_VAL = 50
+N_VAL = 5000
 # Number of samples available for test.
-N_TEST = 100
+N_TEST = 10000
 # Address size of LogicWiSARD models.
 ADDRESS_SIZE = 16
 # Thermometer resolution, if this encoding is used
-THERMO_RESOLUTION = 2
+THERMO_RESOLUTION = 4
 # Enables the Hamming reduction method
 DO_HAMMING = False
 
@@ -41,9 +43,9 @@ DO_HAMMING = False
 
 # The LogicWiSARD generate a bunch of models and selects a few 
 # among them. This parameters set how many should be generated
-N_GEN_MODELS = 20
+N_GEN_MODELS = 3
 # This is to set how many should be selected.
-N_SEL_MODELS = 20
+N_SEL_MODELS = 1
 # Defines the selection type: 'accuracy' or 'size'
 SORT_MODELS_BY = 'accuracy'
 # Minimum value for the threshold search

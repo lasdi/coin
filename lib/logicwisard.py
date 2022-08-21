@@ -345,8 +345,8 @@ class logicwisard:
         
         
         ## Transfering template files
-        os.system("cp ./templates/*.v "+path)
-        os.system("cp ./templates/*.s* "+path)
+        os.system("cp ../lib/templates/*.v "+path)
+        os.system("cp ../lib/templates/*.s* "+path)
         
         ## Set testbench parameters
         tb_params = 'localparam ADDRESS_WIDTH = %d;\n' % (int(self.address_size))

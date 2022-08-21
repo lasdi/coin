@@ -18,12 +18,14 @@ from load_config import load_config
 from gen_logicwisard import gen_logicwisard
 from train_coin import train_coin
 from eval_ensemble import eval_ensemble
+import numpy as np
 
 # Sets project name
 project_name = 'mnist'   
 
 # Loads all configurations from config.py file in project dir
 config = load_config('./')
+np.random.seed(config['SEED'])
 
 # Cleans the output directory
 os.system('rm -f ./out/*')
