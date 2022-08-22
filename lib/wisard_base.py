@@ -135,11 +135,11 @@ def wisard_eval_bc (X, model, mapping, classes, address_size, threshold=1, hammi
             scores[c] = discriminator_eval_bc(xti.astype(int), model[classes[c]], threshold)
             
             # Batch normalization correction 
-            # scores[c] = bc_weights[1][c]*(bc_h*scores[c] - bc_weights[3][c])/np.sqrt(bc_weights[4][c] + epsilon) + bc_weights[2][c]
+            scores[c] = bc_weights[1][c]*(bc_h*scores[c] - bc_weights[3][c])/np.sqrt(bc_weights[4][c] + epsilon) + bc_weights[2][c]
             
             # Batch normalization correction (threshold from FINN)
-            scores[c] -= tau[c]
-            scores[c] *= tau_inv[c]
+            # scores[c] -= tau[c]
+            # scores[c] *= tau_inv[c]
         ############################################        
         
         best_class = np.argmax(scores)    

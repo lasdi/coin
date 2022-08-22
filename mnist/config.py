@@ -35,7 +35,7 @@ N_TEST = 10000
 # Address size of LogicWiSARD models.
 ADDRESS_SIZE = 16
 # Thermometer resolution, if this encoding is used
-THERMO_RESOLUTION = 4
+THERMO_RESOLUTION = 8
 # Enables the Hamming reduction method
 DO_HAMMING = False
 

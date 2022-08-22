@@ -33,7 +33,6 @@ def eval_ensemble (project_name, config):
     
     start_time = time.time()
     full_log = "--- EVAL COIN ENSEMBLE: "+project_name+" ---\n"
-    full_log += "\n> seed = " + str(SEED) 
     datetime_string = datetime.datetime.fromtimestamp(start_time).strftime('%Y-%m-%d_%H-%M-%S')
     full_log += "\nStarting at: "+datetime_string+"\n"
     write2file( full_log)
@@ -65,13 +64,13 @@ def eval_ensemble (project_name, config):
             coin_models.append(pickle.load(inp))
     
         write2file("Address size: "+str(coin_models[m].address_size))
-        # Y_test_pred = coin_models[m].classify(X_test_lst, hamming=DO_HAMMING, bc=True)
-        # acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)    
+        Y_test_pred = coin_models[m].classify(X_test_lst, hamming=DO_HAMMING, bc=True)
+        acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)    
         
         word_cnt, max_value = coin_models[m].get_mem_info()
         minterms_cnt = coin_models[m].get_minterms_info()
         total_minterms += minterms_cnt
-        # write2file('> Pre-ensemble test ACC: %f / Number of words: %d / Number of minterms: %d' % (acc_test, word_cnt, minterms_cnt))    
+        write2file('> Pre-ensemble test ACC: %f / Number of words: %d / Number of minterms: %d' % (acc_test, word_cnt, minterms_cnt))    
         m+=1
     
     write2file('\nTotal number of minterms: '+str(total_minterms))                    
