@@ -11,17 +11,30 @@ from wisard_tools import separate_classes, eval_predictions
 from hamming import hamming_correction
 import matplotlib.pyplot as plt
 from statistics import mode
+import math
 
 def wisard_eval_bin_mk (X, model, mapping, classes, address_size, threshold=1, hamming=False, bc_weights='',n_minterms=0):
     n_samples = X.shape[0]
     X_mapped = X[:,mapping]
     epsilon = 1e-6
+    # Glorot correction
     bc_h = np.float32(np.sqrt(1.5 / (n_minterms + len(classes))))
+
+    # Tau values for thresholding as in FINN
+    tau = np.zeros((len(classes)))
+    tau_inv = np.ones((len(classes)))
+    for c in range (len(classes)):
+        gamma = bc_weights[1][c]; mov_mean = bc_weights[3][c]; mov_var = bc_weights[4][c]; beta = bc_weights[2][c];
+        tau[c] = mov_mean - (beta/(gamma/np.sqrt(mov_var)))
+        tau[c] = math.ceil(tau[c]/bc_h) # Glorot correction
+        # This correction is not needed. Here just to show the diff from original paper
+        # tau[c] = int((tau[c]+n_minterms)/2) 
+        if (gamma/np.sqrt(mov_var+epsilon))<0:
+            tau_inv[c] = -1
     
     if hamming:
         X_mapped = hamming_correction(X_mapped, address_size)
-    
-    
+        
     # Eval for each sample
     scores = np.zeros((n_samples, len(classes)))
     
@@ -34,9 +47,16 @@ def wisard_eval_bin_mk (X, model, mapping, classes, address_size, threshold=1, h
             
         for c in range (len(classes)):
             scores[n,c] = discriminator_eval_bc(xti.astype(int), model[classes[c]], threshold)
+            
             # Batch normalization correction
-            scores[n,c] = bc_weights[1][c]*(bc_h*scores[n,c] - bc_weights[3][c])/np.sqrt(bc_weights[4][c] + epsilon) + bc_weights[2][c]
-                
+            # scores[n,c] *= bc_h
+            # gamma = bc_weights[1][c]; mov_mean = bc_weights[3][c]; mov_var = bc_weights[4][c]; beta = bc_weights[2][c];
+            # scores[n,c] = gamma*(scores[n,c] - mov_mean)/np.sqrt(mov_var + epsilon) + beta
+            
+            # Batch normalization correction (thresholding as in FINN)
+            scores[n,c] -= tau[c]
+            scores[n,c] *= tau_inv[c]            
+            
         ############################################        
 
     

@@ -10,7 +10,7 @@ from discriminator import discriminator_train, discriminator_eval, discriminator
 from wisard_tools import separate_classes, eval_predictions
 from hamming import hamming_correction
 from keras import backend as K
-
+import math
 
 def square_group_mapping (W,H, w,h):
     N = W*H
@@ -106,15 +106,22 @@ def wisard_eval_bc (X, model, mapping, classes, address_size, threshold=1, hammi
     n_samples = X.shape[0]
     X_mapped = X[:,mapping]
     epsilon = 1e-6
+    # For Glorot correction
     bc_h = np.float32(np.sqrt(1.5 / (n_minterms + len(classes))))
     
+    # Tau values for thresholding as in FINN
     tau = np.zeros((len(classes)))
     tau_inv = np.ones((len(classes)))
     for c in range (len(classes)):
-        tau[c] = bc_weights[3][c] - (bc_weights[2][c]/(bc_weights[1][c]/np.sqrt(bc_weights[4][c])))
-        tau[c] = int((tau[c]+n_minterms)/2)
-        if (bc_weights[1][c]/np.sqrt(bc_weights[4][c]))<0:
+        gamma = bc_weights[1][c]; mov_mean = bc_weights[3][c]; mov_var = bc_weights[4][c]; beta = bc_weights[2][c];
+        tau[c] = mov_mean - (beta/(gamma/np.sqrt(mov_var)))
+        tau[c] = math.ceil(tau[c]/bc_h) # Glorot correction
+        # This correction is not needed. Here just to show the diff from original paper
+        # tau[c] = int((tau[c]+n_minterms)/2) 
+        if (gamma/np.sqrt(mov_var+epsilon))<0:
             tau_inv[c] = -1
+            
+        # print("Tau[%d]: %d - Inv[%d]: %d" %(c, tau[c], c, tau_inv[c]))
         
         
     if hamming:
@@ -133,13 +140,15 @@ def wisard_eval_bc (X, model, mapping, classes, address_size, threshold=1, hammi
             
         for c in range (len(classes)):
             scores[c] = discriminator_eval_bc(xti.astype(int), model[classes[c]], threshold)
-            
+                       
             # Batch normalization correction 
-            scores[c] = bc_weights[1][c]*(bc_h*scores[c] - bc_weights[3][c])/np.sqrt(bc_weights[4][c] + epsilon) + bc_weights[2][c]
+            # scores[c] *= bc_h # Glorot correction
+            # gamma = bc_weights[1][c]; mov_mean = bc_weights[3][c]; mov_var = bc_weights[4][c]; beta = bc_weights[2][c];
+            # scores[c] = gamma*(scores[c] - mov_mean)/np.sqrt(mov_var + epsilon) + beta
             
-            # Batch normalization correction (threshold from FINN)
-            # scores[c] -= tau[c]
-            # scores[c] *= tau_inv[c]
+            # Batch normalization correction (thresholding as in FINN)
+            scores[c] -= tau[c]
+            scores[c] *= tau_inv[c]
         ############################################        
         
         best_class = np.argmax(scores)    
