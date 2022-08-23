@@ -2,7 +2,7 @@ import numpy as np
 import struct
 #from numba import njit
 import numbers
-from sklearn.neighbors import KNeighborsClassifier
+#from sklearn.neighbors import KNeighborsClassifier
 
 #@njit
 def index(array, item):
