@@ -99,10 +99,10 @@ def mnist_data_encode_t(X, minimum, maximum, resolution):
     for i in range(o):
         img = X[i,:,:]
         
-        img = deskew(img/255)*255
-        img = img.astype(int)
-        msk = (img > 25 ).astype(int)
-        img = msk*img
+        #img = deskew(img/255)*255
+        #img = img.astype(int)
+        #msk = (img > 25 ).astype(int)
+        #img = msk*img
         
         # img = cv2.resize(X[i,:,:], (m,n), interpolation = cv2.INTER_CUBIC)
         x_lst_t = img.reshape(-1).tolist()
