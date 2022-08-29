@@ -32,6 +32,29 @@ def deskew(image):
     img = interpolation.affine_transform(image,affine,offset=offset)
     return (img - img.min()) / (img.max() - img.min())
 
+
+def bitfield(n, res):    
+    return [int(digit) for digit in bin(n)[2:].zfill(res)]
+
+
+
+def mnist_data_noencode (X, minimum, maximum, resolution):
+    o,m,n = X.shape
+    f = m*n
+    
+    X_lst = np.zeros((o,resolution*f))
+
+    for i in range(o):
+        img = X[i,:,:]
+        
+        x_lst_t = img.reshape(-1).tolist()
+        
+        for j in range (f):
+            xt = bitfield(int(x_lst_t[j]), resolution)
+            X_lst[i,j*resolution:(j+1)*resolution] = np.array(xt).reshape(1,-1)
+
+    return X_lst    
+
 def wisard_data_encode(X, classes, resolution=1, minimum=0, maximum=1):
     n_dim = len(X.shape)
     if n_dim==2:
