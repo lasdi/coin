@@ -12,7 +12,7 @@ example:
 SEED = 32
 # Number of threads requested simultaneously. Used for both
 # LogicWiSARD and COIN training.
-N_THREADS = 5
+N_THREADS = 6
 # Enables plots throughout trainings. Doing this for multiple
 # may be messy
 DO_PLOTS = False
@@ -33,9 +33,9 @@ N_VAL = 5000
 # Number of samples available for test.
 N_TEST = 10000
 # Address size of LogicWiSARD models.
-ADDRESS_SIZE = 16
+ADDRESS_SIZE = 14
 # Thermometer resolution, if this encoding is used
-THERMO_RESOLUTION = 8
+THERMO_RESOLUTION = 2
 # Enables the Hamming reduction method
 DO_HAMMING = False
 

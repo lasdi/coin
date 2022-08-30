@@ -42,7 +42,7 @@ initial begin
 
    // Load each file containing one input
    repeat (N_INPUTS) begin
-      $sformat(fname,"./data/in%04d.txt",cnt);
+      $sformat(fname,"./data/in%0d.txt",cnt);
       $display("Reading file: %s\n", fname);
       $readmemh(fname,sample);
       sop = 1;

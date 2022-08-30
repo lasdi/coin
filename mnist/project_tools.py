@@ -33,7 +33,8 @@ def deskew(image):
     return (img - img.min()) / (img.max() - img.min())
 
 
-def bitfield(n, res):    
+def bitfield(n, res): 
+    # print (n)
     return [int(digit) for digit in bin(n)[2:].zfill(res)]
 
 
@@ -50,7 +51,8 @@ def mnist_data_noencode (X, minimum, maximum, resolution):
         x_lst_t = img.reshape(-1).tolist()
         
         for j in range (f):
-            xt = bitfield(int(x_lst_t[j]), resolution)
+            val = ((2**resolution) - 1)*(int(x_lst_t[j]) - minimum)/(maximum-minimum)
+            xt = bitfield(int(val), resolution)
             X_lst[i,j*resolution:(j+1)*resolution] = np.array(xt).reshape(1,-1)
 
     return X_lst    

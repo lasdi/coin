@@ -229,8 +229,7 @@ class logicwisard:
         Gets the number of words used for throughout recognizers after the
         minterms fusion.
         """        
-        
-        
+               
         if len(self.bc_encoded_rams)==0:
             self.bc_total_minterms = 0
             for r in range(len(self.model[self.classes[0]])):
@@ -245,9 +244,7 @@ class logicwisard:
                             unified_ram[ai] = self.bc_total_minterms
                             self.bc_total_minterms += 1
                 self.bc_encoded_rams.append(unified_ram)
-
-
-        
+       
         n_samples = X.shape[0]
         X_mapped = X[:,self.mapping]                       
         if hamming:
@@ -263,7 +260,6 @@ class logicwisard:
                 if tuple_v in self.bc_encoded_rams[r]:
                     ind = self.bc_encoded_rams[r][tuple_v]
                     X_bc[n, ind] = 1
-
 
         return X_bc
     
@@ -372,6 +368,20 @@ class logicwisard:
         wsd_param_v = wsd_param_v.replace('__INDEX_WIDTH__', str(int(math.ceil(math.log2(x_dim/self.address_size)))))
         wsd_param_v = wsd_param_v.replace('__N_CLASSES__', str(len(self.classes)))
         wsd_param_v = wsd_param_v.replace('__CLASS_WIDTH__', str(int(math.ceil(math.log2(len(self.classes))))))
+        from tau_gen import tau_gen
+        # Tau insertion
+        tau = tau_gen (self.bc_weights, self.get_minterms_info(), len(self.classes))
+        tau_width = int(math.ceil(math.log2(max(tau))))+1
+        tau_str = "wire signed [%d:0] TAU [0:%d];\n" % (tau_width-1, len(self.classes)-1)
+        tau_str += "wire signed [%d:0] TAU_PLUS1 [0:%d];\n" % (tau_width-1, len(self.classes)-1)
+        tau_str += "wire signed [%d:0] TAU_MINUS1 [0:%d];\n" % (tau_width-1, len(self.classes)-1)
+        
+        for i in range(len(tau)):
+           tau_str += "assign TAU[%d] = -%d'd%d;\n" % (i,tau_width, tau[i])
+           tau_str += "assign TAU_PLUS1[%d] = -%d'd%d;\n" % (i, tau_width, tau[i] - 1)
+           tau_str += "assign TAU_MINUS1[%d] = -%d'd%d;\n" % (i, tau_width, tau[i] + 1)
+        wsd_param_v = wsd_param_v.replace('__TAU_PARAMETERS__', tau_str)
+        
         text_file = open(path+'/wisard.v', "w")
         text_file.write(wsd_param_v)
         text_file.close()
@@ -392,7 +402,7 @@ class logicwisard:
                 txt_i += '%08x\n' % (int(xti[m]))
 
             txt_o += str(int(Y[n]))+'\n'
-            fname = "data/in%04d.txt" % (n)    
+            fname = "data/in%d.txt" % (n)    
             text_file = open(path+fname, "w")
             text_file.write(txt_i)
             text_file.close()
