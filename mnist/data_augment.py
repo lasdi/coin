@@ -78,7 +78,7 @@ def gen_data (n_samples, batch_size, thermo_resolution, mWisard=0, bnn=True):
     else:
         X_train_lst = X_train_lst.astype(int)
         Y_train_augm = Y_train_augm.astype(int)
-        out_dir = './data_batch/'
+        out_dir = '../mnist/out/'
         with open(out_dir+'x_mnist_augmented.pkl', 'wb') as outp:
             pickle.dump(X_train_lst, outp, pickle.HIGHEST_PROTOCOL)
         with open(out_dir+'y_mnist_augmented.pkl', 'wb') as outp:
@@ -109,7 +109,7 @@ def save_data(X_train_lst,Y_train_augm, prefix, save_idlabel=True):
 
 
 def load_batch (n_samples):
-    out_dir = './data_batch/'
+    out_dir = '../mnist/out/'
     with open(out_dir+'x_mnist_augmented.pkl', 'rb') as inp:
         X_train_augm = pickle.load(inp)
     with open(out_dir+'y_mnist_augmented.pkl', 'rb') as inp:

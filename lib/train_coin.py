@@ -67,7 +67,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
         mWisard.model = mWisard.model_hamm
 
     
-    if DO_AUGMENTATION==False:            
+    if True: #DO_AUGMENTATION==False:            
         X_train_bc = mWisard.gen_bc_encode(X_train_lst, hamming=DO_HAMMING)
         # X_val_bc = mWisard.gen_bc_encode(X_val_lst, hamming=DO_HAMMING)
         X_test_bc = mWisard.gen_bc_encode(X_test_lst, hamming=DO_HAMMING)
@@ -189,7 +189,7 @@ def train_coin(project_name, config):
     full_log += "\nStarting at: "+datetime_string+"\n"
     write2file( full_log)
     
-    if DO_AUGMENTATION == False:
+    if True: #DO_AUGMENTATION == False:
         from load_data import load_data
         config['N_VAL'] = 0
         X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test = load_data(config)

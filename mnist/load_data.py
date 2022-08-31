@@ -8,11 +8,14 @@ Created on Wed Aug 10 20:11:08 2022
 from project_tools import wisard_data_encode, mnist_data_encode_b, mnist_data_encode_t, mnist_data_encode_z, mnist_data_noencode
 from keras.datasets import mnist
 import numpy as np
+from data_augment import load_batch, gen_data
 
 def load_data (config):
     ADDRESS_SIZE = config['ADDRESS_SIZE']
     THERMO_RESOLUTION = config['THERMO_RESOLUTION']
     DO_HAMMING = config['DO_HAMMING']
+    DO_AUGMENTATION = config['DO_AUGMENTATION']
+    AUGMENT_RATIO = config['AUGMENT_RATIO']
 
     N_TRAIN = config['N_TRAIN']
     N_VAL = config['N_VAL']
@@ -22,6 +25,12 @@ def load_data (config):
     # Import 60000 images from mnist data set
     (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
     
+    if DO_AUGMENTATION:
+        batch_size = 32
+        N_TRAIN = int(X_train.shape[0]*AUGMENT_RATIO)
+        gen_data (N_TRAIN, batch_size, THERMO_RESOLUTION, mWisard=0,bnn=False)        
+        X_train, Y_train = load_batch(-1)
+        
     # Shuffle train set
     n_shuffled = np.arange(X_train.shape[0])
     np.random.shuffle(n_shuffled)
