@@ -14,7 +14,7 @@ import numpy as np
 import pickle
 from project_tools import wisard_data_encode, mnist_data_encode_b, mnist_data_encode_t, mnist_data_encode_z
 
-def gen_data (n_samples, batch_size, thermo_resolution, mWisard=0, bnn=True):
+def gen_data_raw (n_samples, batch_size):
 
     (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
     
@@ -50,6 +50,13 @@ def gen_data (n_samples, batch_size, thermo_resolution, mWisard=0, bnn=True):
     np.random.shuffle(n_shuffled)
     X_train_augm = X_train_augm[n_shuffled,:,:]
     Y_train_augm = Y_train_augm[n_shuffled]
+
+    return X_train_augm, Y_train_augm
+    
+    
+def gen_data (n_samples, batch_size, thermo_resolution, mWisard=0, bnn=True):
+
+    X_train_augm, Y_train_augm = gen_data_raw (n_samples, batch_size)
 
 
     # Y_train_augm = np.squeeze(Y_train_augm)

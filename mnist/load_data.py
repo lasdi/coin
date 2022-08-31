@@ -8,7 +8,7 @@ Created on Wed Aug 10 20:11:08 2022
 from project_tools import wisard_data_encode, mnist_data_encode_b, mnist_data_encode_t, mnist_data_encode_z, mnist_data_noencode
 from keras.datasets import mnist
 import numpy as np
-from data_augment import load_batch, gen_data
+from data_augment import gen_data_raw
 
 def load_data (config):
     ADDRESS_SIZE = config['ADDRESS_SIZE']
@@ -27,9 +27,8 @@ def load_data (config):
     
     if DO_AUGMENTATION:
         batch_size = 32
-        N_TRAIN = int(X_train.shape[0]*AUGMENT_RATIO)
-        gen_data (N_TRAIN, batch_size, THERMO_RESOLUTION, mWisard=0,bnn=False)        
-        X_train, Y_train = load_batch(-1)
+        N_TRAIN = int(X_train.shape[0]*AUGMENT_RATIO)       
+        X_train, Y_train = gen_data_raw (N_TRAIN, batch_size)
         
     # Shuffle train set
     n_shuffled = np.arange(X_train.shape[0])
