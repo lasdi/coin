@@ -29,13 +29,22 @@ def gen_lut_grouped (wsrd, INDEX_WIDTH, O_WIDTH, path):
                     unified_ram[ai] = bit<<c
         for u in unified_ram:
             u_addr = u
+            
+            # Print binary addr (debug)
             # u_addr = (u + np.random.randint(0,2**1,1)[0]) % (2**14)
             # u_addr = np.random.randint(0,2**14,1)[0]
             
             # u_addr = "{0:014b}".format(u_addr)
             # code += '    %d\'b%s: out_v[%d] = %d\'d%d;\n' % (wsrd.address_size,u_addr,r, O_WIDTH,unified_ram[u])
             
-            code += '    %d\'d%d: out_v[%d] = %d\'d%d;\n' % (wsrd.address_size,u_addr,r, O_WIDTH,unified_ram[u])
+            # Print binary addr and data (debug)
+            u_addr = "{0:014b}".format(u_addr)
+            bin_data = "{0:010b}".format(unified_ram[u])            
+            code += '    %d\'b%s: out_v[%d] = %d\'b%s;\n' % (wsrd.address_size,u_addr,r, O_WIDTH,bin_data)
+            
+            # Normal printing
+            # code += '    %d\'d%d: out_v[%d] = %d\'d%d;\n' % (wsrd.address_size,u_addr,r, O_WIDTH,unified_ram[u])
+            
             if unified_ram[u]==0:
                 print("### WARNING - Unified RAM position with all zeros (will be treated as absent case)")
             
@@ -45,7 +54,7 @@ def gen_lut_grouped (wsrd, INDEX_WIDTH, O_WIDTH, path):
 
     code += '\nendmodule'
     
-    text_file = open(path+"wisard_lut.v", "w")
+    text_file = open(path+"wisard_lut_grouped.v", "w")
     text_file.write(code)
     text_file.close()      
     
@@ -176,10 +185,11 @@ def gen_lut_modules (wsrd, INDEX_WIDTH, O_WIDTH, path):
             dict_tmp = wsrd.model[wsrd.classes[c]][r]
             for a in dict_tmp:
                 ai = int(a)
+                bit = int((dict_tmp[a]+1)/2)
                 if ai in unified_ram:
-                    unified_ram[ai] = unified_ram[ai] | (1<<c)
+                    unified_ram[ai] = unified_ram[ai] | (bit<<c)
                 else:
-                    unified_ram[ai] = 1<<c
+                    unified_ram[ai] = bit<<c
         
         n_chunks = 4
         chunk_size =  int(np.ceil(float(len(unified_ram))/n_chunks))
@@ -221,7 +231,7 @@ def gen_lut_modules (wsrd, INDEX_WIDTH, O_WIDTH, path):
     code += '\nendmodule'
     code += local_code
     
-    text_file = open(path+"wisard_lut_modules.v", "w")
+    text_file = open(path+"wisard_lut.v", "w")
     text_file.write(code)
     text_file.close()        
 

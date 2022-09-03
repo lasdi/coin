@@ -203,7 +203,7 @@ class logicwisard:
                     max_value = max_t
         return word_cnt, max_value
     
-    def get_minterms_info (self):
+    def get_minterms_info (self, bits_on=False):
         """
         Gets the number of words used for throughout recognizers after the
         minterms fusion.
@@ -219,10 +219,16 @@ class logicwisard:
                         unified_ram[ai] = unified_ram[ai] | (1<<c)
                     else:
                         unified_ram[ai] = 1<<c
+            if bits_on:
+                counts = bytes(bin(x).count("1") for x in range(2**16))
             for u in unified_ram:
-                total_min += 1
+                if bits_on==False:
+                    total_min += 1
+                else:
+                    total_min += counts[unified_ram[u]]
 
         return total_min
+
 
     def gen_bc_encode (self, X, hamming=False):
         """
@@ -313,7 +319,7 @@ class logicwisard:
         code += 'output reg [ADDRESS_WIDTH-1:0] source_addr, \noutput [INDEX_WIDTH-1:0] source_index);\n\n'        
         code += 'localparam N_INDEXES = %d;\n\n' % (N_INDEXES)
         
-        text_file = open('./templates/mapping_v_fragment.txt')
+        text_file = open('../lib/templates/mapping_v_fragment.txt')
         code += text_file.read()
         text_file.close()        
         
@@ -333,7 +339,7 @@ class logicwisard:
         ## Previous attempts for LUT design 
         # wsd_lut.gen_lut_overgrouped (self, I_WIDTH,O_WIDTH, path)
         # wsd_lut.gen_lut_gates (self, I_WIDTH,O_WIDTH, path)
-        # wsd_lut.gen_lut_modules (self, I_WIDTH,O_WIDTH, path)
+        wsd_lut.gen_lut_modules (self, I_WIDTH,O_WIDTH, path)
         # wsd_lut.gen_lut_ungrouped (self, I_WIDTH,O_WIDTH, path)
         
         #######################################################################

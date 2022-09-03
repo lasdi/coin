@@ -12,7 +12,7 @@ example:
 SEED = 32
 # Number of threads requested simultaneously. Used for both
 # LogicWiSARD and COIN training.
-N_THREADS = 6
+N_THREADS = 5
 # Enables plots throughout trainings. Doing this for multiple
 # may be messy
 DO_PLOTS = False
@@ -43,7 +43,7 @@ DO_HAMMING = False
 
 # The LogicWiSARD generate a bunch of models and selects a few 
 # among them. This parameters set how many should be generated
-N_GEN_MODELS = 3
+N_GEN_MODELS = 1
 # This is to set how many should be selected.
 N_SEL_MODELS = 1
 # Defines the selection type: 'accuracy' or 'size'
@@ -51,14 +51,14 @@ SORT_MODELS_BY = 'accuracy'
 # Minimum value for the threshold search
 MIN_THRESHOLD = 1
 # Maximum value for the threshold search
-MAX_THRESHOLD = 5
+MAX_THRESHOLD = 50
 # Sets the accuracy tolerance below the maximum accuracy 
 # while searching for the threshold. In other words,
 # thresholds that produces models within this range are
 # considered to be chosen
 ACC_DELTA = 0.001
 # Sets how many threshold search attempts it tries before stopping
-ACC_PATIENCE = 2
+ACC_PATIENCE = 5
 
 
 #################### BNN ####################

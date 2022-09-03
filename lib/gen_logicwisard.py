@@ -163,6 +163,7 @@ def gen_logicwisard(project_name, config):
         lw_accs.append(bin_acc_test[sel_i[m]])
         lw_minterms.append(bin_minterms[sel_i[m]])
         write2file("> Model %d (acc/minterms): %f / %d " % (m, lw_accs[m], lw_minterms[m]))
+        # write2file("> LW ones count: %d" % (lw_models[m].get_minterms_info(bits_on=True)))
         total_minterms+=bin_minterms[sel_i[m]]
         with open(out_dir+'/lw_'+datetime_string+'_'+str(m)+'.pkl', 'wb') as outp:
             pickle.dump(lw_models[m], outp, pickle.HIGHEST_PROTOCOL)

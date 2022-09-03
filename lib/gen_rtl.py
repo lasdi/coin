@@ -51,7 +51,7 @@ if __name__ == "__main__":
         filename = sys.argv[2]
     else:
         project_name = 'mnist'    
-        filename = '../mnist/out/coin_logicwisard1.pkl'
+        filename = '../mnist/out/coin_2022-08-30_18-57-14_7.pkl'
     config = load_config('../'+project_name)  
     
     gen_rtl(project_name, config, filename)      

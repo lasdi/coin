@@ -15,28 +15,23 @@ import matplotlib.pyplot as plt
 import os
 import time
 import datetime
-from bnn_mlp import bnn_mlp, bnn_mlp_augment
+from bnn_mlp import bnn_mlp
 from keras.utils import np_utils
 # from sklearn.metrics import accuracy_score
 import pandas as pd
 # from load_config import load_config
-import shutil
+# import shutil
 import threading
 
 def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test):
        
-    from data_augment import gen_data, save_data
     global lw_accs, lw_accs_float, lw_minterms, lw_filenames
     
     DO_PLOTS = config['DO_PLOTS']
     VERBOSE = config['VERBOSE']
-    THERMO_RESOLUTION = config['THERMO_RESOLUTION']
-    BATCH_SIZE = config['BATCH_SIZE']
     DO_HAMMING = config['DO_HAMMING']
     CLASSES = config['CLASSES']
-    DO_AUGMENTATION = config['DO_AUGMENTATION']
-    N_TRAIN = config['N_TRAIN']
-    AUGMENT_RATIO = config['AUGMENT_RATIO']    
+   
     
     write2file('> Started model %d ' %(m))    
     
@@ -66,57 +61,14 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
         mWisard.gen_hamming_model()
         mWisard.model = mWisard.model_hamm
 
+             
+    X_train_bc = mWisard.gen_bc_encode(X_train_lst, hamming=DO_HAMMING)
+    # X_val_bc = mWisard.gen_bc_encode(X_val_lst, hamming=DO_HAMMING)
+    X_test_bc = mWisard.gen_bc_encode(X_test_lst, hamming=DO_HAMMING)
     
-    if True: #DO_AUGMENTATION==False:            
-        X_train_bc = mWisard.gen_bc_encode(X_train_lst, hamming=DO_HAMMING)
-        # X_val_bc = mWisard.gen_bc_encode(X_val_lst, hamming=DO_HAMMING)
-        X_test_bc = mWisard.gen_bc_encode(X_test_lst, hamming=DO_HAMMING)
-        
-        # write2file(">>> Starting BNN training...")
-        model_bc, history = bnn_mlp(config, X_train_bc, Y_train, X_test_bc, Y_test)
+    # write2file(">>> Starting BNN training...")
+    model_bc, history = bnn_mlp(config, X_train_bc, Y_train, X_test_bc, Y_test)
 
-    else: # AUGMENTATION
-        X_test_bc = mWisard.gen_bc_encode(X_test_lst, hamming=DO_HAMMING)
-        do_gen_augmented = True
-        if do_gen_augmented:
-            try:
-                shutil.rmtree("./data")
-            except OSError:
-                pass        
-            os.mkdir("./data")
-            
-            n_augmented_samples = int(AUGMENT_RATIO*N_TRAIN)
-            # print('> Generating and saving data...')
-            train_ids, train_labels, n_total_samples, input_shape = gen_data (n_augmented_samples, BATCH_SIZE, THERMO_RESOLUTION, mWisard)
-            # print('> Saving val data...')
-            # train_ids, train_labels = save_data (X_train_lst, Y_train_augm, 'train')
-            val_ids, val_labels = save_data (X_test_bc, Y_test, 'val')
-        else:
-            # print('> Loading generated data...')
-            with open('data/train_ids.pkl', 'rb') as inp:
-                train_ids = pickle.load(inp)        
-            with open('data/train_labels.pkl', 'rb') as inp:
-                train_labels = pickle.load(inp)               
-            with open('data/val_ids.pkl', 'rb') as inp:
-                val_ids = pickle.load(inp)        
-            with open('data/val_labels.pkl', 'rb') as inp:
-                val_labels = pickle.load(inp)     
-                
-            n_total_samples = len(train_ids)
-            # xt = np.load('data/' + train_ids[0] + '.npy')
-            # input_shape = len(xt)
-    
-        # print ('Number of generated samples: '+str(n_total_samples))
-        partition = {}
-        partition['train'] = train_ids
-        partition['validation'] = val_ids
-        labels = train_labels
-        labels.update(val_labels)
-        
-        # print(">>> Starting BNN training...")
-        model_bc, history = bnn_mlp_augment(config, n_total_samples, input_shape, partition, labels)
-
-    
     # X_test_bc = mWisard.gen_bc_encode(X_test_lst, hamming=DO_HAMMING)
     Y_test_bc = np_utils.to_categorical(Y_test, len(CLASSES)) * 2 - 1
     
@@ -139,6 +91,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     
     # write2file('\n>>> Evaluating post-bc test set...')
     mWisard.create_model_from_bc (weights)
+
     Y_test_pred = mWisard.classify(X_test_lst, hamming=DO_HAMMING, bc=True)
     acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=DO_PLOTS)  
     # write2file('>>> Post-BNN Test set accuracy: ' +str(acc_test)) 
@@ -151,8 +104,13 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     coin_filename = filename.replace('lw','coin')
     with open(coin_filename, 'wb') as outp:
         pickle.dump(mWisard, outp, pickle.HIGHEST_PROTOCOL)
+    
+    # import copy
+    # mWisard.model = copy.deepcopy(mWisard.model_bc)
+    # write2file("> COIN ones count: %d" % (mWisard.get_minterms_info(bits_on=True)))
+    
     del mWisard
-
+    
     lw_filenames[m] = coin_filename
     if DO_PLOTS:
         plt.figure(0)
@@ -169,7 +127,6 @@ def train_coin(project_name, config):
     SEED = config['SEED']
     N_THREADS = config['N_THREADS']
     ADDRESS_SIZE = config['ADDRESS_SIZE']
-    DO_AUGMENTATION = config['DO_AUGMENTATION']
     N_TRAIN_MODELS = config['N_TRAIN_MODELS']
 
     np.random.seed(SEED)
