@@ -130,8 +130,13 @@ def mnist_data_encode_t(X, minimum, maximum, resolution):
         #img = msk*img
         
         # img = cv2.resize(X[i,:,:], (m,n), interpolation = cv2.INTER_CUBIC)
+        
         x_lst_t = img.reshape(-1).tolist()
-        X_lst[i,:] = np.array(thermometer.encode(x_lst_t)).reshape(1,-1)
+        
+        # for j in range (len(x_lst_t)):            
+        #     X_lst[i,j*resolution:(j+1)*resolution] = np.array(thermometer.encode(x_lst_t[j])).reshape(1,-1)
+
+        X_lst[i,:] = np.array(thermometer.encode(x_lst_t).T).reshape(1,-1)
 
     
     return X_lst
