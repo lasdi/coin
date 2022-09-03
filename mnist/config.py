@@ -51,14 +51,14 @@ SORT_MODELS_BY = 'accuracy'
 # Minimum value for the threshold search
 MIN_THRESHOLD = 1
 # Maximum value for the threshold search
-MAX_THRESHOLD = 50
+MAX_THRESHOLD = 5
 # Sets the accuracy tolerance below the maximum accuracy 
 # while searching for the threshold. In other words,
 # thresholds that produces models within this range are
 # considered to be chosen
 ACC_DELTA = 0.001
 # Sets how many threshold search attempts it tries before stopping
-ACC_PATIENCE = 5
+ACC_PATIENCE = 2
 
 
 #################### BNN ####################
@@ -66,7 +66,7 @@ ACC_PATIENCE = 5
 # Sets the maximum number of models to train. -1 to train all models
 N_TRAIN_MODELS = -1
 # Number of epochs
-N_TRAIN_EPOCHS = 5
+N_TRAIN_EPOCHS = 25
 # Batch size
 BATCH_SIZE = 100
 # Learning rate start
