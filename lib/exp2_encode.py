@@ -15,14 +15,8 @@ def get_msb (x):
         number = number >> 1 # shift the whole thing to the right once
     return bitpos
 
-def exp2_encode_vec (X, ibits, obits):
-    ratio = int(ibits/obits)
-
-    # Build the encoded sequences    
-    encods = []
-    for i in range (obits+1):
-        v = np.hstack([np.ones((1,i)), np.zeros((1,obits-i))])
-        encods.append(v.astype(int))  
+def exp2_encode_vec (X, encods, ratio):
+    
                     
     Y = np.zeros((1,0), dtype=int)
     # Find the most significant bits and replace
@@ -34,13 +28,20 @@ def exp2_encode_vec (X, ibits, obits):
     return Y[0]
 
 def exp2_encode (X, ibits, obits):
-
+    ratio = int(ibits/obits)
+    # Build the encoded sequences    
+    encods = []
+    for i in range (obits+1):
+        v = np.hstack([np.ones((1,i)), np.zeros((1,obits-i))])
+        encods.append(v.astype(int)) 
+    
     Y = np.zeros((X.shape[0], obits*X.shape[1]), dtype=int)
     for i in range(X.shape[0]):
         vec = np.squeeze(X[i,:])
-        Y[i,:] = exp2_encode_vec (vec, ibits, obits)
+        Y[i,:] = exp2_encode_vec (vec, encods, ratio)
         
     return Y
+
 if __name__ == "__main__":
     
     Y = exp2_encode(np.array([[1,2],[8, 33]]), 8, 8)
