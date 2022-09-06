@@ -27,7 +27,7 @@ def exp2_encode_vec (X, encods, ratio):
         
     return Y[0]
 
-def exp2_encode (X, ibits, obits):
+def exp2_encode__test (X, ibits, obits):
     ratio = int(ibits/obits)
     # Build the encoded sequences    
     encods = []
@@ -35,6 +35,7 @@ def exp2_encode (X, ibits, obits):
         v = np.hstack([np.ones((1,i)), np.zeros((1,obits-i))])
         encods.append(v.astype(int)) 
     
+    # Encode sample by sample
     Y = np.zeros((X.shape[0], obits*X.shape[1]), dtype=int)
     for i in range(X.shape[0]):
         vec = np.squeeze(X[i,:])
@@ -42,7 +43,21 @@ def exp2_encode (X, ibits, obits):
         
     return Y
 
+
+def exp2_encode (X, ibits, obits):
+    ratio = int(ibits/obits)
+    
+    e = 2**np.arange(ibits)
+    thresholds = []
+    for i in range(ratio-1,ibits,ratio):
+        thresholds.append(e[i])
+    
+    terms = [X >= threshold for threshold in thresholds]
+    X_enc = np.stack(terms, axis=-1)
+    return X_enc.reshape(X_enc.shape[0],-1).astype(int)
+    
+
 if __name__ == "__main__":
     
-    Y = exp2_encode(np.array([[1,2],[8, 33]]), 8, 8)
+    Y = exp2_encode(np.array([[1,2],[8, 128]]), 8, 8)
     print (Y)
