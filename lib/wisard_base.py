@@ -46,15 +46,34 @@ def linear_group_mapping (N, p):
         mapping[i:i+p] = m_tmp 
 
     return mapping      
+
+def block_mapping (N, thermo_resolution, block_width):
+    
+    inner_mapping = np.arange(thermo_resolution * block_width)
+    inner_mapping = inner_mapping.reshape(block_width, thermo_resolution).T
+    for i in range (inner_mapping.shape[0]):
+        np.random.shuffle(inner_mapping[i,:])
+    inner_mapping = inner_mapping.reshape(-1)
+    # print (inner_mapping)
+    
+    mapping = np.arange(N)
+    mapping = mapping.reshape(-1,len(inner_mapping))
+    
+    for i in range(mapping.shape[0]):
+        mapping[i,:] = mapping[i,inner_mapping]
+    
+    return mapping.reshape(-1)    
     
 def wisard_train (X, Y, classes, address_size):
     
     # Totally random mapping
-    mapping = np.arange(X.shape[1])
-    np.random.shuffle(mapping)
+    # mapping = np.arange(X.shape[1])
+    # np.random.shuffle(mapping)
     
     # mapping = square_group_mapping(28,28,4,4)
     # mapping = linear_group_mapping(X.shape[1],address_size)
+    
+    mapping = block_mapping(X.shape[1],8, address_size*4)
     
     X_mapped = X[:,mapping]
     # X_mapped = hamming_correction(X_mapped, address_size)
