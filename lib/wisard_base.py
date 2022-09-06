@@ -73,7 +73,7 @@ def wisard_train (X, Y, classes, address_size):
     # mapping = square_group_mapping(28,28,4,4)
     # mapping = linear_group_mapping(X.shape[1],address_size)
     
-    mapping = block_mapping(X.shape[1],8, address_size*4)
+    mapping = block_mapping(X.shape[1],8, address_size)
     
     X_mapped = X[:,mapping]
     # X_mapped = hamming_correction(X_mapped, address_size)
