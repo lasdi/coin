@@ -10,7 +10,7 @@ from keras.datasets import mnist
 import numpy as np
 from data_augment import gen_data_raw
 from binarization import exponential_thermometer
-
+from exp2_encode import exp2_encode
 def load_data (config):
     ADDRESS_SIZE = config['ADDRESS_SIZE']
     THERMO_RESOLUTION = config['THERMO_RESOLUTION']
@@ -50,8 +50,10 @@ def load_data (config):
         
         # X_train_lst = mnist_data_encode_t(X_train, 0,255,THERMO_RESOLUTION)
         
-        X_train_lst = exponential_thermometer(X_train, num_bits=THERMO_RESOLUTION, individual=False)
-        X_train_lst = X_train_lst.reshape(X_train_lst.shape[0],-1)
+        # X_train_lst = exponential_thermometer(X_train, num_bits=THERMO_RESOLUTION, individual=False)
+        # X_train_lst = X_train_lst.reshape(X_train_lst.shape[0],-1)
+        
+        X_train_lst = exp2_encode(X_train.reshape(X_train.shape[0],-1), 8, THERMO_RESOLUTION)
         
         # X_train_lst = mnist_data_encode_b(X_train)
         # X_train_lst = mnist_data_noencode(X_train, 0,255,THERMO_RESOLUTION)
@@ -65,8 +67,10 @@ def load_data (config):
             
             # X_val_lst = mnist_data_encode_t(X_val, 0,255,THERMO_RESOLUTION)
             
-            X_val_lst = exponential_thermometer(X_val, num_bits=THERMO_RESOLUTION, individual=False)
-            X_val_lst = X_val_lst.reshape(X_val_lst.shape[0],-1)
+            # X_val_lst = exponential_thermometer(X_val, num_bits=THERMO_RESOLUTION, individual=False)
+            # X_val_lst = X_val_lst.reshape(X_val_lst.shape[0],-1)
+            
+            X_val_lst = exp2_encode(X_val.reshape(X_val.shape[0],-1), 8, THERMO_RESOLUTION)
             
             # X_val_lst = mnist_data_encode_b(X_val)
             # X_val_lst = mnist_data_noencode(X_val, 0,255,THERMO_RESOLUTION)
@@ -92,8 +96,10 @@ def load_data (config):
 
     # X_test_lst = mnist_data_encode_t(X_test, 0,255,THERMO_RESOLUTION)
     
-    X_test_lst = exponential_thermometer(X_test, num_bits=THERMO_RESOLUTION, individual=False)
-    X_test_lst = X_test_lst.reshape(X_test_lst.shape[0],-1)
+    # X_test_lst = exponential_thermometer(X_test, num_bits=THERMO_RESOLUTION, individual=False)
+    # X_test_lst = X_test_lst.reshape(X_test_lst.shape[0],-1)
+    
+    X_test_lst = exp2_encode(X_test.reshape(X_test.shape[0],-1), 8, THERMO_RESOLUTION)
     
     # X_test_lst = mnist_data_encode_b(X_test)            
     # X_test_lst = mnist_data_noencode(X_test, 0,255,THERMO_RESOLUTION)

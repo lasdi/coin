@@ -146,15 +146,15 @@ def train_coin(project_name, config):
     full_log += "\nStarting at: "+datetime_string+"\n"
     write2file( full_log)
     
-    if True: #DO_AUGMENTATION == False:
-        from load_data import load_data
-        config['N_VAL'] = 0
-        X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test = load_data(config)
-        
-        write2file("Train set input: "+str(X_train_lst.shape))
-        write2file("Train set output: "+str(Y_train.shape))
-        write2file("Test set input: "+str(X_test_lst.shape))
-        write2file("Test set output: "+str(Y_test.shape))
+    
+    from load_data import load_data
+    config['N_VAL'] = 0
+    X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test = load_data(config)
+    
+    write2file("Train set input: "+str(X_train_lst.shape))
+    write2file("Train set output: "+str(Y_train.shape))
+    write2file("Test set input: "+str(X_test_lst.shape))
+    write2file("Test set output: "+str(Y_test.shape))
   
     cmd_lst = 'ls -1 '+out_dir+'lw*.pkl | sort > '+out_dir+'lw_lst.txt'
     os.system(cmd_lst)    
