@@ -67,13 +67,14 @@ def block_mapping (N, thermo_resolution, block_width):
 def wisard_train (X, Y, classes, address_size):
     
     # Totally random mapping
-    # mapping = np.arange(X.shape[1])
-    # np.random.shuffle(mapping)
+    mapping = np.arange(X.shape[1])
+    np.random.shuffle(mapping)
     
     # mapping = square_group_mapping(28,28,4,4)
     # mapping = linear_group_mapping(X.shape[1],address_size)
     
-    mapping = block_mapping(X.shape[1],8, address_size)
+    # thermo_resolution = 8
+    #mapping = block_mapping(X.shape[1],thermo_resolution , 28*28)
     
     X_mapped = X[:,mapping]
     # X_mapped = hamming_correction(X_mapped, address_size)
