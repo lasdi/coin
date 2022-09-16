@@ -22,18 +22,18 @@ VERBOSE = False
 CLASSES = ['0','1','2','3','4','5','6','7','8','9']
 # Number of samples available for training. It can be reduced
 # for speed. 
-N_TRAIN = 6000
+N_TRAIN = 20000
 # Number of samples to be used in validation during LogicWiSARD
 # generation only. This will be taken from the train set defined
 # above. For ex., if N_TRAIN=60000 and N_VAL=5000, then 55000
 # samples will be used to train LogicWiSARD and 5000 for threshold
 # search. In this case, BNN training will used the whole 60000 set
 # for training.
-N_VAL = 500
+N_VAL = 5000
 # Number of samples available for test.
 N_TEST = 1000
 # Address size of LogicWiSARD models.
-ADDRESS_SIZE = 14
+ADDRESS_SIZE = 16
 # Thermometer resolution, if this encoding is used
 THERMO_RESOLUTION = 2
 # Enables the Hamming reduction method

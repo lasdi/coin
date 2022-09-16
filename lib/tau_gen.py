@@ -22,5 +22,6 @@ def tau_gen (bc_weights, n_minterms, n_classes):
         # tau[c] = int((tau[c]+n_minterms)/2) 
         if (gamma/np.sqrt(mov_var+epsilon))<0:
             tau_inv[c] = -1
+            print("### WARNING: INVERTION NEEDED.")
             
     return tau

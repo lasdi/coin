@@ -22,11 +22,12 @@ import pandas as pd
 # from load_config import load_config
 # import shutil
 import threading
+import copy
 
 def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test):
        
     global lw_accs, lw_accs_float, lw_minterms, lw_filenames
-    
+    global g_weights
     DO_PLOTS = config['DO_PLOTS']
     VERBOSE = config['VERBOSE']
     DO_HAMMING = config['DO_HAMMING']
@@ -77,9 +78,11 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     # write2file('>>> BC Test accuracy:', score[1])
     
     weights = model_bc.get_weights()
+    # g_weights = copy.deepcopy(weights)
+    w_thrd = 0.2*np.max(weights[0])
     for i in range (weights[0].shape[0]):
         for j in range (weights[0].shape[1]):
-            weights[0][i,j] = 1 if weights[0][i,j] >= 0 else -1
+            weights[0][i,j] = 1 if weights[0][i,j] >= w_thrd else -1
     
     model_bc.set_weights(weights)
     score = model_bc.evaluate(X_test_bc, Y_test_bc, verbose=int(VERBOSE))
@@ -123,7 +126,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
 def train_coin(project_name, config):
 
     global lw_accs, lw_accs_float, lw_minterms, lw_filenames
-    
+    global g_weights
     SEED = config['SEED']
     N_THREADS = config['N_THREADS']
     ADDRESS_SIZE = config['ADDRESS_SIZE']
@@ -187,7 +190,7 @@ def train_coin(project_name, config):
           threads[t].join()
         
     print('>>> Training completed.')    
-  
+    # print(g_weights[0].shape)
     
     df = pd.DataFrame()
     df['filename'] = lw_filenames

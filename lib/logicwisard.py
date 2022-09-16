@@ -335,12 +335,16 @@ class logicwisard:
 
         # Generate verilog LUTs
         wsd_lut.gen_lut_grouped (self, INDEX_WIDTH, O_WIDTH, path)
+        wsd_lut.gen_lut_grouped (self, INDEX_WIDTH, O_WIDTH, path, coin=False)
         
         ## Previous attempts for LUT design 
         # wsd_lut.gen_lut_overgrouped (self, I_WIDTH,O_WIDTH, path)
+        # wsd_lut.gen_lut_overgrouped (self, I_WIDTH,O_WIDTH, path, coin=False)
         # wsd_lut.gen_lut_gates (self, I_WIDTH,O_WIDTH, path)
-        wsd_lut.gen_lut_modules (self, I_WIDTH,O_WIDTH, path)
-        # wsd_lut.gen_lut_ungrouped (self, I_WIDTH,O_WIDTH, path)
+        # wsd_lut.gen_lut_modules (self, I_WIDTH,O_WIDTH, path)
+        # wsd_lut.gen_lut_modules (self, I_WIDTH,O_WIDTH, path, coin=False)
+        wsd_lut.gen_lut_ungrouped (self, I_WIDTH,O_WIDTH, path)
+        wsd_lut.gen_lut_ungrouped (self, I_WIDTH,O_WIDTH, path, coin=False)
         
         #######################################################################
         

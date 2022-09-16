@@ -11,12 +11,13 @@ import pickle
 import numpy as np
 import time
 import datetime
-
+from wisard_tools import eval_predictions
 
 def gen_rtl (project_name, config, filename):
 
     DO_HAMMING = config['DO_HAMMING']    
     out_dir = config['PROJ_DIR']+'/out/'
+    CLASSES = ['CLASSES']  
  
     start_time = time.time()
     full_log = "--- GENERATING COIN RTL: "+project_name+" ---\n"
@@ -37,6 +38,8 @@ def gen_rtl (project_name, config, filename):
     n_export = config['N_TEST']
     X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test = load_data(config)
     Y_test_pred = coin_model.classify(X_test_lst, hamming=DO_HAMMING, bc=True)
+    acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)   
+    print("Test set accuracy:", acc_test)
     
     print('\n>>> Generating RTL...')
     coin_model.export2verilog(out_dir+'/rtl/', X_test_lst[0:n_export,:], Y_test_pred[0:n_export])    
