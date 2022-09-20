@@ -215,10 +215,11 @@ class logicwisard:
                 dict_tmp = self.model[self.classes[c]][r]
                 for a in dict_tmp:
                     ai = int(a)
+                    bit = int((dict_tmp[a]+1)/2)
                     if ai in unified_ram:
-                        unified_ram[ai] = unified_ram[ai] | (1<<c)
+                        unified_ram[ai] = unified_ram[ai] | (bit<<c)
                     else:
-                        unified_ram[ai] = 1<<c
+                        unified_ram[ai] = bit<<c
             if bits_on:
                 counts = bytes(bin(x).count("1") for x in range(2**16))
             for u in unified_ram:

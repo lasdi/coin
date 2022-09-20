@@ -40,7 +40,7 @@ def gen_rtl (project_name, config, filename):
     Y_test_pred = coin_model.classify(X_test_lst, hamming=DO_HAMMING, bc=True)
     acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)   
     print("Test set accuracy:", acc_test)
-    
+    print("Number of minterms:", coin_model.get_minterms_info())
     print('\n>>> Generating RTL...')
     coin_model.export2verilog(out_dir+'/rtl/', X_test_lst[0:n_export,:], Y_test_pred[0:n_export])    
     

@@ -7,6 +7,7 @@ Created on Thu Mar 10 08:07:17 2022
 """
 import numpy as np
 from exp2_encode_old import get_msb
+from h3_encode import gen_h3, eval_h3
 
 def get_rightmost (x):
     number = x
@@ -32,6 +33,12 @@ def gen_lut_grouped (wsrd, INDEX_WIDTH, O_WIDTH, path, coin=True):
     code += '(input [ADDR_WIDTH-1:0] addr, input [INDEX_WIDTH-1:0] index, output [O_WIDTH-1:0] out);\n\n'
     code += '\nreg [%d:0] out_v [0:%d];\n\n' % (O_WIDTH-1,len(model[wsrd.classes[0]])-1)
     code += '\nassign out = out_v[index];\n\n'      
+    
+    # ibits= 16; obits = 12;
+    # h3 = gen_h3(ibits, obits)    
+    # addr_size = obits
+    
+    addr_size = wsrd.address_size
     
     for r in range(len(model[wsrd.classes[0]])):
         # code += '\nreg [%d:0] out%d;\n' % (N_CLASSES-1, r)
@@ -64,6 +71,31 @@ def gen_lut_grouped (wsrd, INDEX_WIDTH, O_WIDTH, path, coin=True):
         #     for i in reversed(i_sort):
         #         unified_ram[uv[i]] = dv[i]
 
+        # ##### Sort ####    
+        # uv = []
+        # dv = []
+        # for u in unified_ram:
+        #     uv.append(u)
+        #     dv.append(unified_ram[u])    
+        # i_sort = np.argsort(uv)
+        # unified_ram = {}   
+        # cnt = 0
+        # for i in i_sort:
+        #     unified_ram[uv[i]] = dv[i]  
+        # ################
+
+        # # Convert using H3
+        # uv = []
+        # dv = []
+        # for u in unified_ram:
+        #     uv.append(u)
+        #     dv.append(unified_ram[u])    
+        # uv_keys = eval_h3(h3, uv)
+        # i_sort = np.argsort(uv_keys)
+        # unified_ram = {}   
+        # for i in i_sort:
+        #     unified_ram[uv_keys[i]] = dv[i]   
+        # ################    
 
         for u in unified_ram:
             u_addr = u
@@ -80,9 +112,9 @@ def gen_lut_grouped (wsrd, INDEX_WIDTH, O_WIDTH, path, coin=True):
             #     bin_data = '0000000000'
             # ########################
             
-            code += '    %d\'b%s: out_v[%d] = %d\'b%s;\n' % (wsrd.address_size,u_addr,r, O_WIDTH,bin_data)
+            code += '    %d\'b%s: out_v[%d] = %d\'b%s;\n' % (addr_size,u_addr,r, O_WIDTH,bin_data)
             
-            ## Binary printing
+            ## Decimal printing
             #code += '    %d\'d%d: out_v[%d] = %d\'d%d;\n' % (wsrd.address_size,u_addr,r, O_WIDTH,unified_ram[u])
             
             if unified_ram[u]==0:
