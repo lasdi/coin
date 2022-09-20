@@ -79,8 +79,10 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     
     weights = model_bc.get_weights()
     # g_weights = copy.deepcopy(weights)
-    w_thrd = 0.2*np.max(weights[0])
+    w_thrd = 0.0*np.max(weights[0])
     for i in range (weights[0].shape[0]):
+        #vs = np.argsort(weights[0][i,:])
+        #weights[0][i,vs[0:1]] = -1
         for j in range (weights[0].shape[1]):
             weights[0][i,j] = 1 if weights[0][i,j] >= w_thrd else -1
     
