@@ -7,7 +7,7 @@ Created on Thu Mar 10 08:07:17 2022
 """
 import numpy as np
 from exp2_encode_old import get_msb
-from h3_encode import gen_h3, eval_h3
+# from h3_encode import gen_h3, eval_h3
 
 def get_rightmost (x):
     number = x
