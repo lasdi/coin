@@ -281,6 +281,18 @@ class logicwisard:
                 ind_w = self.bc_encoded_rams[r][ai]
                 for c in range (len(self.classes)):
                     self.model_bc[self.classes[c]][r][ai] = weights[0][ind_w, c]
+
+    def create_bc_from_model (self, weights):
+        self.bc_weights = copy.deepcopy(weights)
+        
+        for r in range(len(self.model[self.classes[0]])):
+            for a in self.bc_encoded_rams[r]:
+                ai = int(a)
+                ind_w = self.bc_encoded_rams[r][ai]
+                for c in range (len(self.classes)):
+                    self.bc_weights[0][ind_w, c] = self.model[self.classes[c]][r][ai]
+        return self.bc_weights
+                    
     
     def export2verilog(self, path, X, Y):
         """
