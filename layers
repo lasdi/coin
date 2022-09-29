@@ -1,0 +1,9 @@
+BNN for MNIST =>
+mnist_cnn.py
+
+BinaryConv2D -> BN -> Activation -> BinaryConov2D -> MaxPooling -> BN -> Activation -> Flatten -> BinaryDense -> BN
+
+1D for HAR =>
+HAR_example_standardization.py
+
+Conv1D -> Conv1D -> Dropout -> MaxPooling1D -> Flatten -> Dense -> Dense 
