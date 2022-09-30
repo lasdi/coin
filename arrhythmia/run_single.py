@@ -27,11 +27,11 @@ config = load_config('./')
 np.random.seed(config['SEED'])
 
 # cleans the output directory
-os.system('rm -f ./out/*')
+#os.system('rm -f ./out/*')
 
 # Generates and trains 3 LogicWiSARD models, picking up 
 # the most accurate.
-gen_logicwisard(project_name, config)
+#gen_logicwisard(project_name, config)
 
 out_dir = config['PROJ_DIR']+'/out/'
 DO_HAMMING = config['DO_HAMMING']
@@ -39,19 +39,19 @@ CLASSES = config['CLASSES']
 DO_PLOTS = config['DO_PLOTS']
 
 ### LW
-print(">>> LogicWiSARD test set evaluation...")
-cmd_lst = 'ls -1 '+out_dir+'lw*.pkl | sort > '+out_dir+'lw_lst.txt'
-os.system(cmd_lst)    
-files_list = open(out_dir+'lw_lst.txt', 'r')
-filenames = files_list.readlines()
-X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test = load_data(config)
-
-for filename in filenames:
-    with open(filename.replace('\n',''), 'rb') as inp:
-        lw_model = pickle.load(inp)
-    Y_test_pred = lw_model.classify(X_test_lst, hamming=DO_HAMMING, bc=False)
-
-    sensitivities, specificities, accuracy = eval_imbalanced(Y_test, Y_test_pred, CLASSES, do_plot=DO_PLOTS)
+#print(">>> LogicWiSARD test set evaluation...")
+#cmd_lst = 'ls -1 '+out_dir+'lw*.pkl | sort > '+out_dir+'lw_lst.txt'
+#os.system(cmd_lst)    
+#files_list = open(out_dir+'lw_lst.txt', 'r')
+#filenames = files_list.readlines()
+#X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test = load_data(config)
+#
+#for filename in filenames:
+#    with open(filename.replace('\n',''), 'rb') as inp:
+#        lw_model = pickle.load(inp)
+#    Y_test_pred = lw_model.classify(X_test_lst, hamming=DO_HAMMING, bc=False)
+#
+#    sensitivities, specificities, accuracy = eval_imbalanced(Y_test, Y_test_pred, CLASSES, do_plot=DO_PLOTS)
     
 # Convert LogicWiSARD to BNN, train it, and then convert to COIN
 train_coin(project_name, config)

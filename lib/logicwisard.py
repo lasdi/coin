@@ -283,6 +283,7 @@ class logicwisard:
                     self.model_bc[self.classes[c]][r][ai] = weights[0][ind_w, c]
 
     def create_bc_from_model (self, weights):
+        delta = 0.001
         self.bc_weights = copy.deepcopy(weights)
         
         for r in range(len(self.model[self.classes[0]])):
@@ -290,7 +291,12 @@ class logicwisard:
                 ai = int(a)
                 ind_w = self.bc_encoded_rams[r][ai]
                 for c in range (len(self.classes)):
-                    self.bc_weights[0][ind_w, c] = self.model[self.classes[c]][r][ai]
+                    if ai in self.model[self.classes[c]][r]:
+                        #self.bc_weights[0][ind_w, c] = 2*(self.model[self.classes[c]][r][ai] - 0.5)
+                        self.bc_weights[0][ind_w, c] = 1*(self.model[self.classes[c]][r][ai] - 0)
+                    else:
+                        self.bc_weights[0][ind_w, c] = 0
+
         return self.bc_weights
                     
     

@@ -17,25 +17,25 @@ N_THREADS = 5
 # may be messy
 DO_PLOTS = False
 # Enables verbose throughout scripts
-VERBOSE = False
+VERBOSE = True
 # Application classes. Didn't test anything other than numbers
 CLASSES = ['0','1','2','3','4','5','6','7','8','9']
 # Number of samples available for training. It can be reduced
 # for speed. 
-N_TRAIN = 20000
+N_TRAIN = 60000
 # Number of samples to be used in validation during LogicWiSARD
 # generation only. This will be taken from the train set defined
 # above. For ex., if N_TRAIN=60000 and N_VAL=5000, then 55000
 # samples will be used to train LogicWiSARD and 5000 for threshold
 # search. In this case, BNN training will used the whole 60000 set
 # for training.
-N_VAL = 5000
+N_VAL = 2000
 # Number of samples available for test.
-N_TEST = 1000
+N_TEST = 10000
 # Address size of LogicWiSARD models.
 ADDRESS_SIZE = 16
 # Thermometer resolution, if this encoding is used
-THERMO_RESOLUTION = 2
+THERMO_RESOLUTION = 8
 # Enables the Hamming reduction method
 DO_HAMMING = False
 
@@ -51,14 +51,14 @@ SORT_MODELS_BY = 'accuracy'
 # Minimum value for the threshold search
 MIN_THRESHOLD = 1
 # Maximum value for the threshold search
-MAX_THRESHOLD = 50
+MAX_THRESHOLD = 10
 # Sets the accuracy tolerance below the maximum accuracy 
 # while searching for the threshold. In other words,
 # thresholds that produces models within this range are
 # considered to be chosen
 ACC_DELTA = 0.001
 # Sets how many threshold search attempts it tries before stopping
-ACC_PATIENCE = 5
+ACC_PATIENCE = 2
 
 
 #################### BNN ####################
@@ -80,7 +80,7 @@ EPSILON = 1E-6
 # Momentum on batch normalization
 MOMENTUM = 0.9
 # Dropout ratio of inputs
-DROP_IN = 0.2
+DROP_IN = 0.0
 # Enables data augmentation
 DO_AUGMENTATION = False
 # Data augmentation ratio. It must be greater than 1.0

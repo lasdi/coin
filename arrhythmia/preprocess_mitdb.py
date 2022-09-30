@@ -152,14 +152,14 @@ def load_mitdb(intra_patients = False, n_max_class=60000):
     X_train = np.delete(X_train, normals[n_max_class:], axis=0)
     Y_train = np.delete(Y_train, normals[n_max_class:])
     
-    # Augmentation
-    oversample = SMOTE()
-    X_train, Y_train = oversample.fit_sample(X_train, Y_train)
+    ## Augmentation
+    #oversample = SMOTE()
+    #X_train, Y_train = oversample.fit_resample(X_train, Y_train)
 
     count_classes (Y_train, "Train-Balanced")
     count_classes (Y_test, "Test")
     
-    return X_train, Y_train, X_test, Y_test
+    return X_train[:,0:186], Y_train, X_test[:,0:186], Y_test
 
 
 if __name__ == '__main__':

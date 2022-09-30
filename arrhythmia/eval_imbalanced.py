@@ -54,6 +54,10 @@ def eval_imbalanced(y_test, y_score, classes, do_plot=True):
     # Finally, calculating specificities per each class
     specificities = (tn / tnfp).filled()
     
+    # Printing
+    print('Confusion Matriz:')
+    print(cm)
+
     print ('\nClass\tSens.\t\tSpec.')
     for c in range(len(classes)):
         print ('%s\t\t%.02f%%\t\t%.02f%%' %(classes[c], sensitivities[c]*100,specificities[c]*100))

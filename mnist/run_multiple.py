@@ -24,13 +24,14 @@ config = load_config('./')
 np.random.seed(config['SEED'])
 
 # cleans the output directory
-os.system('rm -f ./out/*')
+#os.system('rm -f ./out/*')
 
 # Generates and trains 3 LogicWiSARD models, picking up 
 # the most accurate.
-config['N_THREADS'] = 10
-gen_logicwisard(project_name, config)
+#gen_logicwisard(project_name, config)
 
 # Convert LogicWiSARD to BNN, train it, and then convert to COIN
-config['N_THREADS'] = 1
-train_coin(project_name, config)
+for i in range (5):
+    print("RUN NUMBER:",i)
+    np.random.seed(config['SEED']*i + 7*(i+1))
+    train_coin(project_name, config)

@@ -10,6 +10,7 @@ import os
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 import tensorflow as tf
+import keras
 import keras.backend as K
 from keras.datasets import mnist
 from keras.models import Sequential
@@ -22,8 +23,7 @@ from bnn_ops import binary_tanh as binary_tanh_op
 from bnn_layers import BinaryDense, Clip
 
 from keras.models import load_model
-
-
+from sklearn.utils import class_weight
 
 class DropoutNoScale(Dropout):
     '''Keras Dropout does scale the input in training phase, which is undesirable here.
@@ -42,7 +42,7 @@ class DropoutNoScale(Dropout):
 def binary_tanh(x):
     return binary_tanh_op(x)
 
-def bnn_mlp (config, X_train, y_train, X_test, y_test):
+def bnn_mlp (config, X_train, y_train, X_test, y_test, lw_model):
 
     nb_classes = len(config['CLASSES'])
     
@@ -72,16 +72,28 @@ def bnn_mlp (config, X_train, y_train, X_test, y_test):
 
     model.add(BatchNormalization(epsilon=EPSILON, momentum=MOMENTUM, name='bn'))
     
+
     # model.summary()
-    
-    opt = Adam(lr=LR_START) 
-    model.compile(loss='squared_hinge', optimizer=opt, metrics=['acc'])
+    METRICS = ['accuracy']
+    #METRICS = [keras.metrics.Precision(name='precision'), keras.metrics.Recall(name='recall'),]
+    #METRICS = [keras.metrics.Recall(name='recall')]
+    #METRICS = [tf.keras.metrics.MeanSquaredError()]
+    opt = Adam(learning_rate=LR_START) 
+    model.compile(loss='squared_hinge', optimizer=opt, metrics=METRICS)
+    #model.compile(loss='categorical_crossentropy', optimizer=opt, metrics=METRICS)
+
+    #class_weights_v = class_weight.compute_class_weight(class_weight='balanced',classes=np.unique(Y_test),y=Y_test)
+    #class_weights_v = {0: 0.77934463, 1: 0.00910069, 2: 0.09746169, 3: 0.00104672, 4: 0.11304626}
+    class_weights_v = None
+
+    model.set_weights(lw_model.create_bc_from_model(model.get_weights()))
 
     lr_scheduler = LearningRateScheduler(lambda e: LR_START * LR_DECAY ** e)
     history = model.fit(X_train, Y_train,
                         batch_size=BATCH_SIZE, epochs=N_TRAIN_EPOCHS,
                         verbose=int(VERBOSE), validation_data=(X_test, Y_test),
-                        callbacks=[lr_scheduler])
+                        callbacks=[lr_scheduler],
+                        class_weight=class_weights_v)
 
     return model, history
 
@@ -130,7 +142,7 @@ def bnn_mlp_augment (config, n_samples, input_shape, partition, labels):
     
     model.summary()
     
-    opt = Adam(lr=LR_START) 
+    opt = Adam(learning_rate=LR_START) 
     model.compile(loss='squared_hinge', optimizer=opt, metrics=['acc'])
     
     lr_scheduler = LearningRateScheduler(lambda e: LR_START * LR_DECAY ** e)

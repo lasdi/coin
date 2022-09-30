@@ -30,23 +30,15 @@ np.random.seed(config['SEED'])
 # Cleans the output directory
 os.system('rm -f ./out/*')
 
-# For each of the 2 configurations, generates 3 LogicWiSARD models, 
-# picking up the 2 the most accurate. 4 models in total
-#config['SORT_MODELS_BY'] = 'size'
-config['THERMO_RESOLUTION'] = 4
-config['N_GEN_MODELS'] = 4
-config['N_SEL_MODELS'] = 4
+# For each of the 3 configurations, generates 5 LogicWiSARD models, 
+# picking up all the five.
 config['ADDRESS_SIZE'] = 8
 gen_logicwisard(project_name, config)
 config['ADDRESS_SIZE'] = 14
 gen_logicwisard(project_name, config)
-config['N_SEL_MODELS'] = 4
 config['ADDRESS_SIZE'] = 16
 gen_logicwisard(project_name, config)
 
 # Convert all LogicWiSARD models to BNN, train them, 
 # and then convert to COINs
 train_coin(project_name, config)
-
-# Evaluate the for models as an ensemble
-eval_ensemble(project_name, config) 

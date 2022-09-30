@@ -15,8 +15,8 @@ from pandas import read_csv
 from numpy import dstack
 import pickle
 from preprocess_mitdb import load_mitdb
-
-
+from sklearn.model_selection import train_test_split
+from imblearn.over_sampling import SMOTE
     
 
 def load_data (config):
@@ -32,7 +32,7 @@ def load_data (config):
     N_TRAIN -= N_VAL
     
     
-    X_train, Y_train, X_test, Y_test = load_mitdb(intra_patients=True, n_max_class=int(N_TRAIN/5))        
+    X_train, Y_train, X_test, Y_test = load_mitdb(intra_patients=False, n_max_class=int(N_TRAIN/5))        
 
 
     Y_train = Y_train.reshape(-1)
@@ -53,12 +53,20 @@ def load_data (config):
 
     if N_TRAIN>0:
         # Split data according to configuration
-        X_val = X_train[0:N_VAL,:]
-        Y_val = Y_train[0:N_VAL]
-        n_train_a = len(Y_train)-N_VAL
-        n_train_a = n_train_a if N_TRAIN==-1 else min(N_TRAIN, n_train_a)
-        X_train = X_train[N_VAL:N_VAL+n_train_a,:]
-        Y_train = Y_train[N_VAL:N_VAL+n_train_a]    
+#        X_val = X_train[0:N_VAL,:]
+#        Y_val = Y_train[0:N_VAL]
+#        n_train_a = len(Y_train)-N_VAL
+#        n_train_a = n_train_a if N_TRAIN==-1 else min(N_TRAIN, n_train_a)
+#        X_train = X_train[N_VAL:N_VAL+n_train_a,:]
+#        Y_train = Y_train[N_VAL:N_VAL+n_train_a]    
+        X_train, X_val, Y_train, Y_val = train_test_split(X_train,Y_train,test_size=N_VAL/N_TRAIN,stratify=Y_train) 
+
+        # Augmentation
+        print(X_train.shape)
+        print(Y_train.shape)
+        oversample = SMOTE()
+        X_train, Y_train = oversample.fit_resample(X_train.reshape(X_train.shape[0],X_train.shape[1]), Y_train)
+        X_train = np.expand_dims(X_train, 2)
   
         print('>>> Encoding train set...')
         X_train_lst = mnist_data_encode_t(X_train, 0,2**bits_in - 1,THERMO_RESOLUTION)
