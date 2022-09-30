@@ -76,7 +76,7 @@ trainX, testX = scale_data(trainX, testX)
 
 # transform trainX into how input data looks to the filters
 # stride = 1, padding = 1, filter_size = k = 3
-k = 3 
+k = 5 
 padding = np.zeros(9)
 trainX_new = list()
 
@@ -85,7 +85,9 @@ for i in range(0,len(trainX)):
     # pad the first and last row of the sample
     row_first = 0
     sample = np.insert(sample, row_first, [padding], axis=0)
+    sample = np.insert(sample, row_first, [padding], axis=0)
     row_last = sample.shape[0]
+    sample = np.insert(sample, row_last, [padding], axis=0)
     sample = np.insert(sample, row_last, [padding], axis=0)
     # run the sliding filter
     for j in range(len(sample)-k+1):
@@ -99,7 +101,7 @@ with open('./WNN_dataset/'+'trainX.pkl', 'wb') as outp:
     pickle.dump(trainX_new, outp, pickle.HIGHEST_PROTOCOL)
 
 # get activations for labels y
-with open('./saved_activations/'+'_act1_out_train.pkl', 'rb') as inp:
+with open('_act1_out_train.pkl', 'rb') as inp:
     act1_out_train = pickle.load(inp)
 
 trainy_new = []

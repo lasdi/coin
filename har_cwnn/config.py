@@ -22,7 +22,7 @@ VERBOSE = True
 CLASSES = ['0','1']
 # Number of samples available for training. It can be reduced
 # for speed. 
-N_TRAIN = int(658739 * 0.2)
+N_TRAIN = int(658739 * 0.6)
 # Number of samples to be used in validation during LogicWiSARD
 # generation only. This will be taken from the train set defined
 # above. For ex., if N_TRAIN=60000 and N_VAL=5000, then 55000
