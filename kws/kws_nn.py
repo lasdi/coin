@@ -5,7 +5,8 @@ Created on Thu Sep 22 17:59:25 2022
 
 @author: igor
 """
-
+import sys
+sys.path.insert(0, '../lib/')
 import tensorflow as tf
 import numpy as np
 # from tensorflow.keras.layers import Dense, Activation, Input
@@ -77,7 +78,7 @@ elif nn_type=='cnn':
 
 ann_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
-ann_model_history = ann_model.fit(X_train, Y_train,validation_data=(X_val, Y_val), epochs=25, batch_size = 100)
+ann_model_history = ann_model.fit(X_train, Y_train,validation_data=(X_val, Y_val), epochs=50, batch_size = 100)
 
 print(">>> Test set evaluation...")
 y_true=[]

@@ -5,18 +5,11 @@ Created on Wed Aug 10 20:11:08 2022
 
 @author: igor
 """
+import sys
+sys.path.insert(0, '../lib/')
 from project_tools import wisard_data_encode, mnist_data_encode_b, mnist_data_encode_t, mnist_data_encode_z, mnist_data_noencode
-# from keras.datasets import mnist
 import numpy as np
-# from data_augment import gen_data_raw
-# from binarization import exponential_thermometer
-# from exp2_encode import exp2_encode
-# from pandas import read_csv
-# from numpy import dstack
 import pickle
-# from preprocess_mitdb import load_mitdb
-# from sklearn.model_selection import train_test_split
-# from imblearn.over_sampling import SMOTE
 from feat_extract_chunk import feat_extract_chunk    
 import librosa 
 import speechpy
@@ -188,7 +181,7 @@ def load_data (config, do_encoding=True):
 
 
 if __name__ == "__main__":
-    # gen_data()
+    gen_data()
     config = {}
     config['THERMO_RESOLUTION'] = 2
     config['CLASSES'] = ["down", "go", "left", "no", "off", "on", "right",
