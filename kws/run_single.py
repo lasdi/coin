@@ -20,18 +20,18 @@ import numpy as np
 import pickle
 
 # Sets project name
-project_name = 'arrhythmia'   
+project_name = 'kws'   
 
 # Loads all configurations from config.py file in project dir
 config = load_config('./')
 np.random.seed(config['SEED'])
 
 # cleans the output directory
-os.system('rm -f ./out/*')
+# os.system('rm -f ./out/*')
 
 # Generates and trains 3 LogicWiSARD models, picking up 
 # the most accurate.
-gen_logicwisard(project_name, config)
+# gen_logicwisard(project_name, config)
 
 out_dir = config['PROJ_DIR']+'/out/'
 DO_HAMMING = config['DO_HAMMING']
@@ -54,7 +54,7 @@ DO_PLOTS = config['DO_PLOTS']
 #    sensitivities, specificities, accuracy = eval_imbalanced(Y_test, Y_test_pred, CLASSES, do_plot=DO_PLOTS)
     
 # Convert LogicWiSARD to BNN, train it, and then convert to COIN
-train_coin(project_name, config)
+# train_coin(project_name, config)
 
 
 ### COIN

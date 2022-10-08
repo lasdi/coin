@@ -29,7 +29,7 @@ np.random.seed(56)
 # Types: mlp, cnn_sathvik, lenet5
 nn_type = 'cnn_sathvik'
 
-X_train, Y_train, X_test, Y_test = load_mitdb(intra_patients=False, n_max_class=40000)
+X_train, Y_train, X_test, Y_test = load_mitdb(intra_patients=False, n_max_class=20000)
 X_train, X_val, Y_train, Y_val = train_test_split(X_train,Y_train,test_size=0.2)
 
 Y_train = to_categorical(Y_train)

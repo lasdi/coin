@@ -15,11 +15,12 @@ SEED = 32
 N_THREADS = 5
 # Enables plots throughout trainings. Doing this for multiple
 # may be messy
-DO_PLOTS = False
+DO_PLOTS = True
 # Enables verbose throughout scripts
 VERBOSE = True
 # Application classes. Didn't test anything other than numbers
-CLASSES = ['N','S', 'V', 'F', 'Q']
+CLASSES = ["down", "go", "left", "no", "off", "on", "right",
+                     "stop", "up", "yes", "unknown"]
 # Number of samples available for training. It can be reduced
 # for speed. 
 N_TRAIN = 20000*5
@@ -33,9 +34,9 @@ N_VAL = int(N_TRAIN*0.2)
 # Number of samples available for test.
 N_TEST = 100000
 # Address size of LogicWiSARD models.
-ADDRESS_SIZE = 16
+ADDRESS_SIZE = 13
 # Thermometer resolution, if this encoding is used
-THERMO_RESOLUTION = 8
+THERMO_RESOLUTION = 8 
 # Enables the Hamming reduction method
 DO_HAMMING = False
 

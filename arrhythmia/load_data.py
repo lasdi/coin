@@ -32,7 +32,7 @@ def load_data (config):
     N_TRAIN -= N_VAL
     
     
-    X_train, Y_train, X_test, Y_test = load_mitdb(intra_patients=False, n_max_class=int(N_TRAIN/5))        
+    X_train, Y_train, X_test, Y_test = load_mitdb(intra_patients=True, n_max_class=int(N_TRAIN/5))        
 
 
     Y_train = Y_train.reshape(-1)
