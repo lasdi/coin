@@ -15,7 +15,8 @@ import matplotlib.pyplot as plt
 import os
 import time
 import datetime
-from bnn_mlp import bnn_mlp
+# from bnn_mlp import bnn_mlp
+from brevitas_bnn_mlp import bnn_mlp
 from keras.utils import np_utils
 # from sklearn.metrics import accuracy_score
 import pandas as pd
@@ -32,7 +33,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     VERBOSE = config['VERBOSE']
     DO_HAMMING = config['DO_HAMMING']
     CLASSES = config['CLASSES']
-   
+    N_THREADS = config['N_THREADS']
     
     write2file('> Started model %d ' %(m))    
     
@@ -177,20 +178,31 @@ def train_coin(project_name, config):
     lw_minterms = [None]*n_lw_models  
     lw_filenames = [None]*n_lw_models  
     
-    for model_i in range(0,n_lw_models, N_THREADS):
-      n_threads_r = min(N_THREADS, n_lw_models-model_i)
-      print('>>>> model_i %d - %d / %d <<<<<' %(model_i+1,model_i+n_threads_r, n_lw_models))
-      threads = []
-      for t in range(n_threads_r):
-          m = model_i+t
-          filename = filenames[m].replace('\n','')
-          new_thread = threading.Thread(target=train_thread, args=(m,config,filename,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test))
-          threads.append(new_thread)
-          new_thread.start()
-      
-      for t in range(n_threads_r):
-          threads[t].join()
+
+    if N_THREADS>1:
+        for model_i in range(0,n_lw_models, N_THREADS):
+          n_threads_r = min(N_THREADS, n_lw_models-model_i)
+          print('>>>> model_i %d - %d / %d <<<<<' %(model_i+1,model_i+n_threads_r, n_lw_models))
+          threads = []
+          for t in range(n_threads_r):
+              m = model_i+t
+              filename = filenames[m].replace('\n','')
+              new_thread = threading.Thread(target=train_thread, args=(m,config,filename,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test))
+              threads.append(new_thread)
+              new_thread.start()
+          
+          for t in range(n_threads_r):
+              threads[t].join()
         
+    else:
+        for model_i in range(0,n_lw_models, N_THREADS):
+          n_threads_r = min(N_THREADS, n_lw_models-model_i)
+          print('>>>> model_i %d - %d / %d <<<<<' %(model_i+1,model_i+n_threads_r, n_lw_models))
+          threads = []
+          for t in range(n_threads_r):
+              m = model_i+t
+              filename = filenames[m].replace('\n','')
+              train_thread(m,config,filename,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test)
     print('>>> Training completed.')    
     # print(g_weights[0].shape)
     

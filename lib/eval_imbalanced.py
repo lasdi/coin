@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 from matplotlib import pyplot as plt
 import seaborn as sns
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, roc_auc_score
 
 def eval_imbalanced(y_test, y_score, classes, do_plot=True):
     
@@ -64,7 +64,9 @@ def eval_imbalanced(y_test, y_score, classes, do_plot=True):
     
     accuracy = accuracy_score(y_test, y_score)
     print('> Accuracy: %.02f%%' % (accuracy*100))
-    
+
+    auc = roc_auc_score(y_test, y_score)
+    print('> auc: %.04f%%' % (auc))    
     
 
     if do_plot==True:        

@@ -42,6 +42,7 @@ class logicwisard:
     bc_encoded_rams = []
     bc_total_minterms = 0
     bc_weights = 0
+    prune_scores = {}
     
     def __init__(self, classes, address_size, min_threshold=1, max_threshold=100, ram_type = 'dict'):
         self.address_size = address_size
@@ -298,8 +299,57 @@ class logicwisard:
                         self.bc_weights[0][ind_w, c] = 0
 
         return self.bc_weights
-                    
     
+    def update_pruning_scores(self, xti, label_class):
+
+        for c in range (len(self.classes)):   # Classes/discriminators     
+            for r in range(len(self.prune_scores[self.classes[c]])):  # RAMs in a class
+                pos = xti[r]
+                if pos in self.model_bc[self.classes[c]][r]:
+                    if c==label_class and self.model_bc[self.classes[c]][r][pos]==1:
+                        self.prune_scores[self.classes[c]][r][pos] -= 1
+                    elif c!=label_class and self.model_bc[self.classes[c]][r][pos]==-1:
+                        self.prune_scores[self.classes[c]][r][pos] -= 1
+                    else:
+                        self.prune_scores[self.classes[c]][r][pos] += 1
+                # else:
+                #     self.prune_scores[self.classes[c]][r][pos] +=1
+
+                
+    def pruning (self, X, Y, keep_ratio):
+        """
+        Gets the score of each RAM position on each discriminator.
+        """
+        self.prune_scores = copy.deepcopy(self.model_bc)
+        
+        # Zeroing all positions
+        for c in range (len(self.classes)):   # Classes/discriminators     
+            for r in range(len(self.prune_scores[self.classes[c]])):  # RAMs in a class
+                for pos in self.prune_scores[self.classes[c]][r]:   # Positions in a RAM 
+                    self.prune_scores[self.classes[c]][r][pos] = 0
+        
+        # Assign scores
+        for n in range (X.shape[0]):
+            xt = X[n,:].reshape(-1, self.address_size)
+            xti = xt.dot(1 << np.arange(xt.shape[-1] - 1, -1, -1))            
+            self.update_pruning_scores(xti, Y[n])
+            
+        # Zeroing all positions
+        for c in range (len(self.classes)):   # Classes/discriminators     
+            for r in range(len(self.prune_scores[self.classes[c]])):  # RAMs in a class    
+                vals = self.prune_scores[self.classes[c]][r].values()
+                sorted_i = np.argsort(vals)
+                last = int(keep_ratio*len(vals))
+                threshold = vals[sorted_i[last]]
+                dict_model = self.model_bc[self.classes[c]][r]
+                dict_scores = self.prune_scores[self.classes[c]][r]
+                
+                for it in dict_scores:
+                    if dict_scores[it]>=threshold:
+                        dict_model[it] = 0
+                    
+                self.model_bc[self.classes[c]][r]  = {key:val for key, val in dict_model.items() if val != 0}
+  
     def export2verilog(self, path, X, Y):
         """
         Exports model to verilog RTL, creates a testbech and exports the data.

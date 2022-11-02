@@ -24,12 +24,12 @@ config = load_config('./')
 np.random.seed(config['SEED'])
 
 # cleans the output directory
-os.system('rm -f ./out/*')
+# os.system('rm -f ./out/*')
 
 # Generates and trains 3 LogicWiSARD models, picking up 
 # the most accurate.
 config['N_THREADS'] = 10
-gen_logicwisard(project_name, config)
+# gen_logicwisard(project_name, config)
 
 # Convert LogicWiSARD to BNN, train it, and then convert to COIN
 config['N_THREADS'] = 1
