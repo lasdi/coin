@@ -88,6 +88,8 @@ def wisard_train (X, Y, classes, address_size):
     
     return model, mapping
 
+
+# Slow evaluation. Use wisard_eval_bin_array
 def wisard_eval_bin (X, model, mapping, classes, address_size, thresholds=[1], hamming=False):
     n_samples = X.shape[0]
     X_mapped = X[:,mapping]
@@ -120,6 +122,54 @@ def wisard_eval_bin (X, model, mapping, classes, address_size, thresholds=[1], h
     
     if len(thresholds)==1:
         Y_pred = Y_pred[0]
+    return np.array(Y_pred)
+
+# Faster evaluation function
+def wisard_eval_bin_array (X, model, mapping, classes, address_size, thresholds=[1], hamming=False):
+    n_samples = X.shape[0]
+    X_mapped = X[:,mapping]
+    
+    if hamming:
+        X_mapped = hamming_correction(X_mapped, address_size)
+    
+    Y_pred = []
+    for b in range(len(thresholds)):
+        Y_pred.append([])
+    
+    # Eval for each sample
+    
+    for n in range (n_samples):
+        xt = X_mapped[n,:].reshape(-1, address_size)
+        xti = xt.dot(1 << np.arange(xt.shape[-1] - 1, -1, -1))
+        
+        # Vector is prepared to be used across classes
+        X_single = xti.astype(int)
+        # Matrix for scores across classes and thresholds
+        scores_classes_thresholds = np.zeros((len(classes),len(thresholds)))
+        for c in range (len(classes)):
+            class_model = model[classes[c]]
+            sel_scores = []
+            # Find the RAMs values accessed by the input vector X_single            
+            for r in range(len(X_single)):
+                if X_single[r] in class_model[r]:      
+                    sel_scores.append(class_model[r][X_single[r]])
+            sel_scores = np.array(sel_scores)
+            # Evaluate for all thresholds at once
+            above_thresholds_mtx = sel_scores.reshape(-1,1) >= thresholds.reshape(1,-1)
+            above_thresholds_mtx = above_thresholds_mtx.astype(int)
+            scores_t = np.sum(above_thresholds_mtx, axis=0)
+            scores_classes_thresholds[c,:] = scores_t.reshape(1,-1)
+            
+        # Find the best classes across thresholds
+        scores_thresholds = np.argmax(scores_classes_thresholds, axis=0)
+            
+        # For multiple threshold
+        for b in range(len(thresholds)):            
+            Y_pred[b].append(scores_thresholds[b])
+    
+    if len(thresholds)==1:
+        Y_pred = Y_pred[0]
+        
     return np.array(Y_pred)
 
 def wisard_eval_bc (X, model, mapping, classes, address_size, threshold=1, hamming=False, bc_weights='',n_minterms=0):
@@ -242,7 +292,9 @@ def wisard_find_threshold (X, Y, model, mapping, classes, address_size, min_thre
     best_cnt = 0
     fall_cnt = 0
     
-    Y_pred = wisard_eval_bin (X, model, mapping, classes, address_size, thresholds=np.arange(min_threshold,max_threshold+1), hamming=hamming)   
+    # Y_pred = wisard_eval_bin (X, model, mapping, classes, address_size, thresholds=np.arange(min_threshold,max_threshold+1), hamming=hamming)   
+    Y_pred = wisard_eval_bin_array (X, model, mapping, classes, address_size, thresholds=np.arange(min_threshold,max_threshold+1), hamming=hamming)   
+
     
     accuracies = []
     word_counts = []
