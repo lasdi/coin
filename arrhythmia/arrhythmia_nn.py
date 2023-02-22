@@ -5,6 +5,8 @@ Created on Thu Sep 22 17:59:25 2022
 
 @author: igor
 """
+import sys
+sys.path.insert(0, '../lib/')
 
 import tensorflow as tf
 import numpy as np
@@ -27,9 +29,12 @@ os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 np.random.seed(56)
 
 # Types: mlp, cnn_sathvik, lenet5
-nn_type = 'cnn_sathvik'
+nn_type = 'lenet5'
 
 X_train, Y_train, X_test, Y_test = load_mitdb(intra_patients=False, n_max_class=20000)
+Y_train = Y_train>0; Y_train = Y_train.astype(int);
+Y_test = Y_test>0; Y_test = Y_test.astype(int);
+
 X_train, X_val, Y_train, Y_val = train_test_split(X_train,Y_train,test_size=0.2)
 
 Y_train = to_categorical(Y_train)
@@ -73,7 +78,7 @@ elif nn_type=='lenet5':
     ann_model.add(Flatten())    
     ann_model.add(Dense(64, activation='relu'))
     ann_model.add(Dense(32, activation='relu'))    
-    ann_model.add(Dense(5, activation = 'softmax'))
+    ann_model.add(Dense(2, activation = 'softmax'))
  
     
 ann_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -87,5 +92,6 @@ for element in Y_test:
 prediction_proba=ann_model.predict(X_test,verbose=0)
 y_prediction=np.argmax(prediction_proba,axis=1)
 
-CLASSES = ['N','S', 'V', 'F', 'Q']
+# CLASSES = ['N','S', 'V', 'F', 'Q']
+CLASSES = ['N','S']
 sensitivities, specificities, accuracy = eval_imbalanced(y_true, y_prediction, CLASSES, do_plot=True)

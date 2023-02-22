@@ -6,11 +6,11 @@ Created on Sat Sep 25 06:30:12 2021
 @author: igor
 """
 import numpy as np
-from discriminator import discriminator_train, discriminator_eval, discriminator_eval_bc
+from discriminator import discriminator_train, discriminator_eval, discriminator_eval_coin
 from wisard_tools import separate_classes, eval_predictions
-from hamming import hamming_correction
 from keras import backend as K
 import math
+from scipy.optimize import minimize
 
 def square_group_mapping (W,H, w,h):
     N = W*H
@@ -66,7 +66,7 @@ def block_mapping (N, thermo_resolution, block_width):
     
 def wisard_train (X, Y, classes, address_size):
     
-    # Totally random mapping
+    # Totally random mapping   
     mapping = np.arange(X.shape[1])
     np.random.shuffle(mapping)
     
@@ -77,7 +77,7 @@ def wisard_train (X, Y, classes, address_size):
     #mapping = block_mapping(X.shape[1],thermo_resolution , 28*28)
     
     X_mapped = X[:,mapping]
-    # X_mapped = hamming_correction(X_mapped, address_size)
+
     
     X_class = separate_classes (X_mapped, Y, classes, address_size)
     
@@ -90,13 +90,10 @@ def wisard_train (X, Y, classes, address_size):
 
 
 # Slow evaluation. Use wisard_eval_bin_array
-def wisard_eval_bin (X, model, mapping, classes, address_size, thresholds=[1], hamming=False):
+def wisard_eval_bin (X, model, mapping, classes, address_size, thresholds=[1]):
     n_samples = X.shape[0]
     X_mapped = X[:,mapping]
-    
-    if hamming:
-        X_mapped = hamming_correction(X_mapped, address_size)
-    
+
     Y_pred = []
     for b in range(len(thresholds)):
         Y_pred.append([])
@@ -125,13 +122,10 @@ def wisard_eval_bin (X, model, mapping, classes, address_size, thresholds=[1], h
     return np.array(Y_pred)
 
 # Faster evaluation function
-def wisard_eval_bin_array (X, model, mapping, classes, address_size, thresholds=[1], hamming=False):
+def wisard_eval_bin_array (X, model, mapping, classes, address_size, thresholds=[1]):
     n_samples = X.shape[0]
     X_mapped = X[:,mapping]
-    
-    if hamming:
-        X_mapped = hamming_correction(X_mapped, address_size)
-    
+
     Y_pred = []
     for b in range(len(thresholds)):
         Y_pred.append([])
@@ -172,20 +166,20 @@ def wisard_eval_bin_array (X, model, mapping, classes, address_size, thresholds=
         
     return np.array(Y_pred)
 
-def wisard_eval_bc (X, model, mapping, classes, address_size, threshold=1, hamming=False, bc_weights='',n_minterms=0):
+def wisard_eval_coin (X, model, mapping, classes, address_size, threshold=1, coin_weights='',n_minterms=0):
     n_samples = X.shape[0]
     X_mapped = X[:,mapping]
     epsilon = 1e-6
     # For Glorot correction
-    bc_h = np.float32(np.sqrt(1.5 / (n_minterms + len(classes))))
+    coin_h = np.float32(np.sqrt(1.5 / (n_minterms + len(classes))))
     
     # Tau values for thresholding as in FINN
     tau = np.zeros((len(classes)))
     tau_inv = np.ones((len(classes)))
     for c in range (len(classes)):
-        gamma = bc_weights[1][c]; mov_mean = bc_weights[3][c]; mov_var = bc_weights[4][c]; beta = bc_weights[2][c];
+        gamma = coin_weights[1][c]; mov_mean = coin_weights[3][c]; mov_var = coin_weights[4][c]; beta = coin_weights[2][c];
         tau[c] = mov_mean - (beta/(gamma/np.sqrt(mov_var)))
-        tau[c] = math.ceil(tau[c]/bc_h) # Glorot correction
+        tau[c] = math.ceil(tau[c]/coin_h) # Glorot correction
         # This correction is not needed. Here just to show the diff from original paper
         # tau[c] = int((tau[c]+n_minterms)/2) 
         if (gamma/np.sqrt(mov_var+epsilon))<0:
@@ -193,10 +187,7 @@ def wisard_eval_bc (X, model, mapping, classes, address_size, threshold=1, hammi
             
         # print("Tau[%d]: %d - Inv[%d]: %d" %(c, tau[c], c, tau_inv[c]))
         
-        
-    if hamming:
-        X_mapped = hamming_correction(X_mapped, address_size)
-    
+
     Y_pred = []
     
     # Eval for each sample
@@ -209,11 +200,11 @@ def wisard_eval_bc (X, model, mapping, classes, address_size, threshold=1, hammi
         ####### Binarized model ####################
             
         for c in range (len(classes)):
-            scores[c] = discriminator_eval_bc(xti.astype(int), model[classes[c]], threshold)
+            scores[c] = discriminator_eval_coin(xti.astype(int), model[classes[c]], threshold)
                        
             # Batch normalization correction 
-            # scores[c] *= bc_h # Glorot correction
-            # gamma = bc_weights[1][c]; mov_mean = bc_weights[3][c]; mov_var = bc_weights[4][c]; beta = bc_weights[2][c];
+            # scores[c] *= coin_h # Glorot correction
+            # gamma = coin_weights[1][c]; mov_mean = coin_weights[3][c]; mov_var = coin_weights[4][c]; beta = coin_weights[2][c];
             # scores[c] = gamma*(scores[c] - mov_mean)/np.sqrt(mov_var + epsilon) + beta
             
             # Batch normalization correction (thresholding as in FINN)
@@ -229,12 +220,10 @@ def wisard_eval_bc (X, model, mapping, classes, address_size, threshold=1, hammi
     return np.array(Y_pred)
 
 
-def wisard_eval (X, model, mapping, classes, address_size, min_threshold=1, max_threshold=100, hamming=False):
+def wisard_eval (X, model, mapping, classes, address_size, min_threshold=1, max_threshold=100):
     n_samples = X.shape[0]
     X_mapped = X[:,mapping]
     
-    if hamming:
-        X_mapped = hamming_correction(X_mapped, address_size)
     
     Y_pred = []
     
@@ -283,7 +272,120 @@ def get_above_threshold_count (model, classes, threshold):
                     cnt += 1
     return cnt
 
-def wisard_find_threshold (X, Y, model, mapping, classes, address_size, min_threshold=1, max_threshold=100, acc_delta=0.001, acc_patience=2, hamming=False):
+def get_num_minterms_raw_model (model, classes, thresholds):
+    """
+    Gets the number of words used for throughout recognizers after the
+    minterms fusion.
+    """        
+    total_min = 0
+    for r in range(len(model[classes[0]])):
+        unified_ram = {}
+        for c in range (len(classes)):
+            dict_tmp = model[classes[c]][r]
+            for a in dict_tmp:
+                ai = int(a)
+                bit = int(dict_tmp[a]>=thresholds[c,r])
+                if ai in unified_ram:
+                    unified_ram[ai] = unified_ram[ai] | (bit<<c)
+                else:
+                    unified_ram[ai] = bit<<c
+
+        for u in unified_ram:
+            total_min += 1
+ 
+    return total_min
+
+
+
+def wisard_find_threshold (X, Y, model, mapping, classes, address_size, min_threshold=1, max_threshold=100, opt_acc_first=True, acc_delta=0.001, minterms_max=100000):
+    max_acc = 0
+    maxacc_threshold = 0
+    maxacc_cnt = 0
+    best_acc = 0
+    best_threshold = 0
+    best_cnt = 0
+    
+    Y_pred = wisard_eval_bin_array (X, model, mapping, classes, address_size, thresholds=np.arange(min_threshold,max_threshold+1))
+    # Y_pred = wisard_eval_bin (X, model, mapping, classes, address_size, thresholds=np.arange(min_threshold,max_threshold+1))
+       
+    accuracies = []
+    minterms_counts = []
+    # Compute all accuracies and word counts
+    b = 0
+    for threshold in range(min_threshold,max_threshold+1):
+        # Y_pred = wisard_eval_bin (X, model, mapping, classes, address_size, thresholds=[threshold])
+        acc_t = eval_predictions(Y, Y_pred[b], classes, do_plot=False)   
+        # cnt_t = get_above_threshold_count (model, classes, threshold)
+        thresholds = threshold*np.ones((len(classes), len(model[classes[0]])))  
+        cnt_t = get_num_minterms_raw_model (model, classes, thresholds)
+        accuracies.append(acc_t)
+        minterms_counts.append(cnt_t)
+        b+=1
+    
+    ## Search for the desired threshold
+    thresholds = np.arange(min_threshold,max_threshold+1)
+    
+    
+    
+    # Find maximum accuracy
+    b_max = np.argmax(accuracies)
+    b_max_v = np.where (np.array(accuracies)==accuracies[b_max])[0]
+    b = b_max_v[-1]
+    max_acc = accuracies[b]
+    maxacc_threshold = thresholds[b]
+    maxacc_cnt = minterms_counts[b]
+
+    if opt_acc_first==False:         
+        # Find sufficient small modules
+        smalls_v = np.where (np.array(minterms_counts)<=minterms_max)[0]
+        if len(smalls_v)>0:
+            smalls_thresholds = thresholds[smalls_v]
+            smalls_acc = accuracies[smalls_v]
+            smalls_cnt = minterms_counts[smalls_v]
+            b = np.argmax(smalls_acc)
+            best_acc = smalls_acc[b]
+            best_threshold = smalls_thresholds[b]*np.ones((len(classes), len(model[classes[0]])))  
+            best_cnt = smalls_cnt[b] 
+        else:
+            opt_acc_first = True
+    
+    if opt_acc_first:      
+        # Find minimum size
+        sel_accs = np.where(accuracies>= max_acc-acc_delta)[0]
+        b = sel_accs[-1]
+        best_acc = accuracies[b]
+        best_threshold = thresholds[b]*np.ones((len(classes), len(model[classes[0]])))                
+        best_cnt = minterms_counts[b]   
+ 
+    
+        
+    return best_acc, best_threshold, best_cnt, max_acc, maxacc_threshold, maxacc_cnt
+
+
+def multi_threshold_loss (thresholds, Y, Y_counts):
+    
+    thresholds = thresholds.reshape(Y_counts.shape[1],-1)
+    
+    # Y_pred = np.zeros((Y_counts.shape[0]), dtype=int)
+    
+    # for n in range (Y_counts.shape[0]):
+    #     above_thresholds_mtx = Y_counts[n,:,:] >= thresholds
+    #     above_thresholds_mtx = above_thresholds_mtx.astype(int)        
+    #     scores_t = np.sum(above_thresholds_mtx, axis=1)            
+    #     # Find the best classes across thresholds
+    #     Y_pred[n] = np.argmax(scores_t)
+
+    above_thresholds_mtx = Y_counts >= thresholds
+    above_thresholds_mtx = above_thresholds_mtx.astype(int)        
+    scores_t = np.sum(above_thresholds_mtx, axis=2)
+    Y_pred = np.argmax(scores_t, axis=1)
+
+    error = 1 - (sum(Y_pred == Y) / len(Y))
+    
+    loss = error + 15/np.mean(thresholds)
+    return loss
+        
+def wisard_find_thresholds (X, Y, model, mapping, classes, address_size, min_threshold=1, max_threshold=100, opt_acc_first=True, acc_delta=0.001, minterms_max=100000):
     max_acc = 0
     maxacc_threshold = 0
     maxacc_cnt = 0
@@ -291,43 +393,56 @@ def wisard_find_threshold (X, Y, model, mapping, classes, address_size, min_thre
     best_threshold = 0
     best_cnt = 0
     fall_cnt = 0
+    thresholds=np.arange(min_threshold,max_threshold+1)
     
-    # Y_pred = wisard_eval_bin (X, model, mapping, classes, address_size, thresholds=np.arange(min_threshold,max_threshold+1), hamming=hamming)   
-    Y_pred = wisard_eval_bin_array (X, model, mapping, classes, address_size, thresholds=np.arange(min_threshold,max_threshold+1), hamming=hamming)   
+    n_samples = X.shape[0]
+    X_mapped = X[:,mapping]
+    
+    # 3D vector with #samples, #classes, #RAMs
+    Y_counts = np.zeros((n_samples,len(classes),len(model[classes[0]])), dtype=int)    
+    
+    # Eval for each sample
+    
+    for n in range (n_samples):
+        xt = X_mapped[n,:].reshape(-1, address_size)
+        xti = xt.dot(1 << np.arange(xt.shape[-1] - 1, -1, -1))
+        
+        # Vector is prepared to be used across classes
+        X_single = xti.astype(int)
+        
+        # Filling matrix for scores across classes and rams
+        for c in range (len(classes)):
+            class_model = model[classes[c]]
+            # Find the RAMs values accessed by the input vector X_single            
+            for r in range(len(X_single)):
+                if X_single[r] in class_model[r]:      
+                    Y_counts[n,c,r] = class_model[r][X_single[r]]
 
+    thresholds_0 = np.random.randint(5, min(20, max_threshold), (Y_counts.shape[1]*Y_counts.shape[2]))        
     
-    accuracies = []
-    word_counts = []
+    print ("Optimization...",end='')
+    res = minimize(multi_threshold_loss, thresholds_0, method='BFGS',
+                          args=(Y, Y_counts), options={'disp': True})
     
-    # Compute all accuracies and word counts
-    b = 0
-    for threshold in range(min_threshold,max_threshold+1):
-        # Y_pred = wisard_eval_bin (X, model, mapping, classes, address_size, thresholds=[threshold], hamming=hamming)        
-        acc_t = eval_predictions(Y, Y_pred[b], classes, do_plot=False)   
-        cnt_t = get_above_threshold_count (model, classes, threshold)
-        accuracies.append(acc_t)
-        word_counts.append(cnt_t)
-        b+=1
+    print (" done!")
     
-    # Search for the desired threshold
-    b = 0
-    for threshold in range(min_threshold,max_threshold+1):    
-        if accuracies[b]>=max_acc:
-            max_acc = accuracies[b]
-            maxacc_threshold = threshold
-            maxacc_cnt = word_counts[b]
-            fall_cnt = 0
-        else:
-            fall_cnt += 1
-        # print('<b: %d, acc: %.04f> '%(threshold, accuracies[b]))
-        if fall_cnt>=acc_patience:
-            break
-        if accuracies[b]>max_acc-acc_delta:
-            best_acc = accuracies[b]
-            best_threshold = threshold                
-            best_cnt = word_counts[b]
-        
-        b+=1
-        
+    thresholds = np.array(res.x).reshape(Y_counts.shape[1],-1)
+    Y_pred = np.zeros((Y_counts.shape[0]), dtype=int)
+    
+    for n in range (Y_counts.shape[0]):
+        above_thresholds_mtx = Y_counts[n,:,:] >= thresholds
+        above_thresholds_mtx = above_thresholds_mtx.astype(int)        
+        scores_t = np.sum(above_thresholds_mtx, axis=1)            
+        # Find the best classes across thresholds
+        Y_pred[n] = np.argmax(scores_t)
+
+    best_acc = sum(Y_pred == Y) / len(Y)
+    best_threshold = thresholds
+    best_cnt = 0
+    
+    max_acc = best_acc
+    maxacc_threshold = best_threshold
+    maxacc_cnt = best_cnt
+    
     return best_acc, best_threshold, best_cnt, max_acc, maxacc_threshold, maxacc_cnt
             

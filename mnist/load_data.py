@@ -11,10 +11,23 @@ import numpy as np
 from data_augment import gen_data_raw
 from binarization import exponential_thermometer
 from exp2_encode import exp2_encode
+
+
+def zero_ext (X, ADDRESS_SIZE):
+    n_zeros_ext = int(np.ceil(X.shape[1] / ADDRESS_SIZE) * ADDRESS_SIZE - X.shape[1])
+    print("> " +str(n_zeros_ext) + " Zeros Added.")
+    
+    if n_zeros_ext>0:
+        X_zeros_ext = np.hstack([X, np.zeros((X.shape[0], n_zeros_ext), dtype=int)])        
+    else:
+        X_zeros_ext = X
+        
+    return X_zeros_ext
+
+
 def load_data (config):
     ADDRESS_SIZE = config['ADDRESS_SIZE']
     THERMO_RESOLUTION = config['THERMO_RESOLUTION']
-    DO_HAMMING = config['DO_HAMMING']
     DO_AUGMENTATION = config['DO_AUGMENTATION']
     AUGMENT_RATIO = config['AUGMENT_RATIO']
 
@@ -107,5 +120,9 @@ def load_data (config):
     # X_test_lst = wisard_data_encode(X_test, classes, resolution=THERMO_RESOLUTION, minimum=0, maximum=255)
     X_test_lst = X_test_lst.astype(int)
     Y_test = Y_test.astype(int)
+
+    X_train_lst = zero_ext (X_train_lst, ADDRESS_SIZE)
+    X_val_lst = zero_ext (X_val_lst, ADDRESS_SIZE)
+    X_test_lst = zero_ext (X_test_lst, ADDRESS_SIZE)
 
     return X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test

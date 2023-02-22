@@ -11,32 +11,28 @@ module wisard
  output reg source_valid,
  output reg [CLASS_WIDTH-1:0] class_result);
 
+localparam LUT_I_W = ADDRESS_WIDTH + INDEX_WIDTH;
 
 integer i, j;
+wire [LUT_I_W-1:0] in_lut;
 wire  [N_CLASSES-1:0] out_lut;
-reg signed [INDEX_WIDTH:0] class_count [0:N_CLASSES-1];
-reg signed [INDEX_WIDTH:0] class_count_buf [0:N_CLASSES-1];
+reg [INDEX_WIDTH:0] class_count [0:N_CLASSES-1];
+reg [INDEX_WIDTH:0] class_count_buf [0:N_CLASSES-1];
 wire eop_valid;
 reg eop_1dly, eop_2dly;
 reg eop_valid_1dly;
 reg [CLASS_WIDTH-1:0] eop_cnt;
 reg [CLASS_WIDTH-1:0] class_result_prev;
-reg signed [INDEX_WIDTH:0] max_val;
+reg [INDEX_WIDTH:0] max_val;
 wire source_valid_prev;
-wire present;
-
-// Automatically generated parameters
-__TAU_PARAMETERS__
+assign in_lut = {index, addr};
 
 // LUT Instantiation
-wisard_lut #(.ADDR_WIDTH(ADDRESS_WIDTH), .INDEX_WIDTH(INDEX_WIDTH), .O_WIDTH(N_CLASSES)) 
+wisard_lut #(.I_WIDTH(LUT_I_W), .O_WIDTH(N_CLASSES)) 
 wisard_lut_u0
-(.addr(addr),.index(index), .out(out_lut));
+(.in(in_lut), .out(out_lut));
 
-// Indicates when the current address is present in the LUT 
-assign present = |out_lut;
-
-// Counts the hits of each class
+// Count the hits of each class
 always @ (posedge clk or negedge rst_n) begin
   if(!rst_n) begin
      for (i=0; i<N_CLASSES; i=i+1)
@@ -45,11 +41,9 @@ always @ (posedge clk or negedge rst_n) begin
   else if (sink_valid) begin
      for (j=0; j<N_CLASSES; j=j+1) begin
         if (sop)
-          class_count[j] <= out_lut[j] ? TAU_PLUS1[j] : present ? TAU_MINUS1[j] : TAU[j];
+          class_count[j] <= out_lut[j];
         else if (out_lut[j])
           class_count[j] <= class_count[j] + 1;
-        else if (present)
-          class_count[j] <= class_count[j] - 1;
      end
   end
 end

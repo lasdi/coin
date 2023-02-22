@@ -27,8 +27,10 @@ def train_thread(epoch,config,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst
     ADDRESS_SIZE = config['ADDRESS_SIZE']
     MIN_THRESHOLD = config['MIN_THRESHOLD']
     MAX_THRESHOLD = config['MAX_THRESHOLD']
+    OPT_ACC_FIRST = config['OPT_ACC_FIRST']
     ACC_DELTA = config['ACC_DELTA']
-    ACC_PATIENCE = config['ACC_PATIENCE']
+    MINTERMS_MAX = config['MINTERMS_MAX']
+    MULTIDIM_THRESHOLD = config['MULTIDIM_THRESHOLD']
     CLASSES = config['CLASSES']
 
        
@@ -37,14 +39,14 @@ def train_thread(epoch,config,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst
     mWisard.fit(X_train_lst, Y_train)
     
     # write2file('>>> Evaluate model...')
-    word_cnt, max_value = mWisard.get_mem_info()
-    Y_test_pred = mWisard.classify(X_test_lst)    
-    acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)       
+    # word_cnt, max_value = mWisard.get_mem_info()
+    # Y_test_pred = mWisard.classify(X_test_lst)    
+    # acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)       
     # write2file('> Pre-bin Test ACC: %f / Number of words: %d ' % (acc_test, word_cnt))       
     
     ###### Binarization ######
     # write2file('>>> Searching for binarization threshold...')
-    best_acc, best_threshold, best_cnt, max_acc, max_threshold, max_cnt = mWisard.find_threshold(X_val_lst, Y_val, ACC_DELTA, ACC_PATIENCE)
+    best_acc, best_threshold, best_cnt, max_acc, max_threshold, max_cnt = mWisard.find_threshold(X_val_lst, Y_val, OPT_ACC_FIRST, ACC_DELTA, MINTERMS_MAX, MULTIDIM_THRESHOLD)
     # write2file('Max results => acc: %f / threshold: %d / word_cnt: %d' % (max_acc, max_threshold, max_cnt))
     # write2file('best results => acc: %f / threshold: %d / word_cnt: %d' % (best_acc, best_threshold, best_cnt))
     
@@ -53,13 +55,13 @@ def train_thread(epoch,config,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst
     Y_test_pred = mWisard.classify(X_test_lst)
     acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)    
     
-    word_cnt, max_value = mWisard.get_mem_info()
+    # word_cnt, max_value = mWisard.get_mem_info()
     minterms_cnt = mWisard.get_minterms_info()
-    # write2file('> Post-bin test ACC: %f / Number of words: %d / Number of minterms: %d' % (acc_test, word_cnt, minterms_cnt))
+    # write2file('> Post-bin test ACC: %f / Number of minterms: %d' % (acc_test, minterms_cnt))
     
     bin_acc[epoch] = max_acc
     bin_acc_test[epoch] = acc_test
-    bin_mem[epoch] = word_cnt
+    bin_mem[epoch] = 0 #word_cnt
     bin_minterms[epoch] = minterms_cnt
     bin_models[epoch] = mWisard
     write2file('> Finished models %d' %(epoch))
@@ -129,7 +131,8 @@ def gen_logicwisard(project_name, config):
             threads[t].join()
             
     print('>>> Training completed.')             
-     
+    # sys.exit(0)
+    
     # Plot search Results
     if DO_PLOTS:
         plt.plot(bin_minterms, bin_acc_test,'g^')

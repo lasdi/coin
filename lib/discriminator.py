@@ -26,7 +26,7 @@ def discriminator_eval(X, class_model, bleaching):
 
     return score
 
-def discriminator_eval_bc(X, class_model, bleaching):
+def discriminator_eval_coin(X, class_model, bleaching):
     score = 0
     
     for r in range(len(X)):

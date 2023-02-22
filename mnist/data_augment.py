@@ -68,9 +68,9 @@ def gen_data (n_samples, batch_size, thermo_resolution, mWisard=0, bnn=True):
         labels = {}
         n_total_samples = 0
         for n in range(0,X_train_lst.shape[0],batch_size):
-            X_train_bc_tmp = mWisard.gen_bc_encode(X_train_lst[n:n+batch_size,:], hamming=False)            
+            X_train_coin_tmp = mWisard.gen_coin_encode(X_train_lst[n:n+batch_size,:])
             prefix = 'train_b'+str(int(n/batch_size))
-            ids_tmp, labels_tmp = save_data(X_train_bc_tmp,Y_train_augm[n:n+batch_size], prefix, save_idlabel=False)
+            ids_tmp, labels_tmp = save_data(X_train_coin_tmp,Y_train_augm[n:n+batch_size], prefix, save_idlabel=False)
             ids = [*ids, *ids_tmp]
             labels.update(labels_tmp)
             n_total_samples += batch_size
@@ -80,7 +80,7 @@ def gen_data (n_samples, batch_size, thermo_resolution, mWisard=0, bnn=True):
             pickle.dump(ids, outp, pickle.HIGHEST_PROTOCOL)
         with open(out_dir+'train_labels.pkl', 'wb') as outp:
             pickle.dump(labels, outp, pickle.HIGHEST_PROTOCOL)    
-        return ids, labels, n_total_samples, X_train_bc_tmp.shape[1]
+        return ids, labels, n_total_samples, X_train_coin_tmp.shape[1]
     
     else:
         X_train_lst = X_train_lst.astype(int)

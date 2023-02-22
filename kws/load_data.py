@@ -14,6 +14,60 @@ from feat_extract_chunk import feat_extract_chunk
 import librosa 
 import speechpy
 from exp2_encode import exp2_encode
+import ctypes as c
+from scipy.stats import norm
+
+def binarize_datasets(train_inputs, val_inputs, test_inputs, bits_per_input, train_val_split_ratio=0.9):
+    # Given a Gaussian with mean=0 and std=1, choose values which divide the distribution into regions of equal probability
+    # This will be used to determine thresholds for the thermometer encoding
+    std_skews = [norm.ppf((i+1)/(bits_per_input+1))
+                 for i in range(bits_per_input)]
+
+    print("Binarizing train/validation dataset")
+    use_gaussian_encoding = True
+    if use_gaussian_encoding:
+        mean_inputs = train_inputs.mean(axis=0)
+        std_inputs = train_inputs.std(axis=0)
+        train_binarizations = []
+        for i in std_skews:
+            train_binarizations.append(
+                (train_inputs >= mean_inputs+(i*std_inputs)).astype(c.c_ubyte))
+    else:
+        min_inputs = train_inputs.min(axis=0)
+        max_inputs = train_inputs.max(axis=0)
+        train_binarizations = []
+        for i in range(bits_per_input):
+            train_binarizations.append(
+                (train_inputs > min_inputs+(((i+1)/(bits_per_input+1))*(max_inputs-min_inputs))).astype(c.c_ubyte))
+
+    # Creates thermometer encoding
+    train_inputs = np.concatenate(train_binarizations, axis=1)
+
+    print("Binarizing val dataset")
+    val_binarizations = []
+    if use_gaussian_encoding:
+        for i in std_skews:
+            val_binarizations.append(
+                (val_inputs >= mean_inputs+(i*std_inputs)).astype(c.c_ubyte))
+    else:
+        for i in range(bits_per_input):
+            val_binarizations.append(
+                (val_inputs > min_inputs+(((i+1)/(bits_per_input+1))*(max_inputs-min_inputs))).astype(c.c_ubyte))
+    val_inputs = np.concatenate(val_binarizations, axis=1)
+
+    print("Binarizing test dataset")
+    test_binarizations = []
+    if use_gaussian_encoding:
+        for i in std_skews:
+            test_binarizations.append(
+                (test_inputs >= mean_inputs+(i*std_inputs)).astype(c.c_ubyte))
+    else:
+        for i in range(bits_per_input):
+            test_binarizations.append(
+                (test_inputs > min_inputs+(((i+1)/(bits_per_input+1))*(max_inputs-min_inputs))).astype(c.c_ubyte))
+    test_inputs = np.concatenate(test_binarizations, axis=1)
+
+    return train_inputs, val_inputs, test_inputs
 
 def gen_list_files(config, listname):
     fp_files = open(listname, 'r')
@@ -139,6 +193,36 @@ def load_data (config, do_encoding=True):
         all_min = 0
         all_max = 2**nbits - 1
         
+        for i in range(X_train.shape[0]):
+            X_train[i,:,:] = speechpy.processing.cmvn(X_train[i,:,:].T).T   
+        for i in range(X_val.shape[0]):
+            X_val[i,:,:] = speechpy.processing.cmvn(X_val[i,:,:].T).T
+        for i in range(X_test.shape[0]):
+            X_test[i,:,:] = speechpy.processing.cmvn(X_test[i,:,:].T).T
+      
+        X_train, X_val, X_test = binarize_datasets(X_train, X_val, X_test, 8)
+        X_train = X_train.reshape(X_train.shape[0],-1)
+        X_val = X_val.reshape(X_val.shape[0],-1)
+        X_test = X_test.reshape(X_test.shape[0],-1)  
+        
+        # x_dim1 = X_train.shape[1]
+        # x_dim2 = X_train.shape[2]
+        # X_train = X_train.reshape(X_train.shape[0],-1)
+        # X_val = X_val.reshape(X_val.shape[0],-1)
+        # X_test = X_test.reshape(X_test.shape[0],-1)       
+        # X_train -= np.min(X_train, axis=0, keepdims=True); 
+        # X_train *= all_max/np.max(X_train, axis=0, keepdims=True) ; 
+        # X_train = np.clip(X_train,0,all_max);
+        # X_val -= np.min(X_val, axis=0, keepdims=True); 
+        # X_val *= all_max/np.max(X_val, axis=0, keepdims=True) ; 
+        # X_val = np.clip(X_val,0,all_max);        
+        # X_test -= np.min(X_test, axis=0, keepdims=True); 
+        # X_test *= all_max/np.max(X_test, axis=0, keepdims=True) ; 
+        # X_test = np.clip(X_test,0,all_max);                
+        # X_train = X_train.reshape(X_train.shape[0],x_dim1,x_dim2)
+        # X_val = X_val.reshape(X_val.shape[0],x_dim1,x_dim2)
+        # X_test = X_test.reshape(X_test.shape[0],x_dim1,x_dim2)        
+        
         # X_train -= np.min(X_train); X_train *= all_max/np.max(X_train);
         # X_val -= np.min(X_val); X_val *= all_max/np.max(X_val);
         # X_test -= np.min(X_test); X_test *= all_max/np.max(X_test);
@@ -146,30 +230,41 @@ def load_data (config, do_encoding=True):
         # X_train = 10**X_train; X_train *= all_max/np.max(X_train);
         # X_val = 10**X_val; X_val *= all_max/np.max(X_val);
         # X_test = 10**X_test; X_test *= all_max/np.max(X_test);
-        
-        for i in range(X_val.shape[0]):
-            x_tmp = speechpy.processing.cmvn(X_val[i,:,:].T).T
-            x_tmp -= np.min(x_tmp, axis=0).reshape(1,-1)
-            x_tmp *= all_max/np.max(x_tmp, axis=0).reshape(1,-1)
-            X_val[i,:,:] = x_tmp
-        for i in range(X_test.shape[0]):
-            x_tmp = speechpy.processing.cmvn(X_test[i,:,:].T).T
-            x_tmp -= np.min(x_tmp, axis=0).reshape(1,-1)
-            x_tmp *= all_max/np.max(x_tmp, axis=0).reshape(1,-1)
-            X_test[i,:,:] = x_tmp
-        for i in range(X_train.shape[0]):
-            x_tmp = speechpy.processing.cmvn(X_train[i,:,:].T).T
-            x_tmp -= np.min(x_tmp, axis=0).reshape(1,-1)
-            x_tmp *= all_max/np.max(x_tmp, axis=0).reshape(1,-1)
-            X_train[i,:,:] = x_tmp
+
+        # for i in range(X_train.shape[0]):
+        #     x_tmp = speechpy.processing.cmvn(X_train[i,:,:].T).T
+        #     x_tmp -= np.min(x_tmp, axis=0).reshape(1,-1)
+        #     x_tmp *= all_max/np.max(x_tmp, axis=0).reshape(1,-1)
+        #     X_train[i,:,:] = x_tmp        
+        # for i in range(X_val.shape[0]):
+        #     x_tmp = speechpy.processing.cmvn(X_val[i,:,:].T).T
+        #     x_tmp -= np.min(x_tmp, axis=0).reshape(1,-1)
+        #     x_tmp *= all_max/np.max(x_tmp, axis=0).reshape(1,-1)
+        #     X_val[i,:,:] = x_tmp
+        # for i in range(X_test.shape[0]):
+        #     x_tmp = speechpy.processing.cmvn(X_test[i,:,:].T).T
+        #     x_tmp -= np.min(x_tmp, axis=0).reshape(1,-1)
+        #     x_tmp *= all_max/np.max(x_tmp, axis=0).reshape(1,-1)
+        #     X_test[i,:,:] = x_tmp
+
             
-        X_train = exp2_encode(X_train.reshape(X_train.shape[0],-1), nbits, THERMO_RESOLUTION)
-        X_val = exp2_encode(X_val.reshape(X_val.shape[0],-1), nbits, THERMO_RESOLUTION)
-        X_test = exp2_encode(X_test.reshape(X_test.shape[0],-1), nbits, THERMO_RESOLUTION)
+        # X_train = exp2_encode(X_train.reshape(X_train.shape[0],-1), nbits, THERMO_RESOLUTION)
+        # X_val = exp2_encode(X_val.reshape(X_val.shape[0],-1), nbits, THERMO_RESOLUTION)
+        # X_test = exp2_encode(X_test.reshape(X_test.shape[0],-1), nbits, THERMO_RESOLUTION)
         
         # X_train = mnist_data_encode_t(X_train.astype(int), all_min,all_max,THERMO_RESOLUTION)
         # X_val = mnist_data_encode_t(X_val.astype(int), all_min,all_max,THERMO_RESOLUTION)
         # X_test = mnist_data_encode_t(X_test.astype(int), all_min,all_max,THERMO_RESOLUTION)
+        
+        # X_train = np.asarray(list(speechpy.processing.cmvn(f.T).T for f in X_train))
+        # X_val = np.asarray(list(speechpy.processing.cmvn(f.T).T for f in X_val))
+        # X_test = np.asarray(list(speechpy.processing.cmvn(f.T).T for f in X_test))
+        
+        # X_train, x_mean, x_std = mnist_data_encode_z(X_train, [], [])
+        # X_val, x_mean, x_std = mnist_data_encode_z(X_val, [], [])
+        # X_test, x_mean, x_std = mnist_data_encode_z(X_test, [], [])
+        
+        
         X_train = X_train.astype(int)
         Y_train = Y_train.astype(int)      
         X_val = X_val.astype(int)
@@ -181,9 +276,9 @@ def load_data (config, do_encoding=True):
 
 
 if __name__ == "__main__":
-    gen_data()
+    # gen_data()
     config = {}
-    config['THERMO_RESOLUTION'] = 2
+    config['THERMO_RESOLUTION'] = 8
     config['CLASSES'] = ["down", "go", "left", "no", "off", "on", "right",
                      "stop", "up", "yes", "unknown"]
     X_train, Y_train, X_val, Y_val, X_test, Y_test = load_data(config)

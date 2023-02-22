@@ -23,7 +23,7 @@ def get_rightmost (x):
 
 def gen_lut_grouped (wsrd, INDEX_WIDTH, O_WIDTH, path, coin=True):
     if coin==True:
-        model = wsrd.model_bc
+        model = wsrd.model_coin
     else:
         model = wsrd.model
 
@@ -135,7 +135,7 @@ def gen_lut_grouped (wsrd, INDEX_WIDTH, O_WIDTH, path, coin=True):
 def gen_lut_modules (wsrd, INDEX_WIDTH, O_WIDTH, path, coin = True): 
 
     if coin==True:
-        model = wsrd.model_bc
+        model = wsrd.model_coin
     else:
         model = wsrd.model
     # LUT v4 ##############################################################
@@ -213,7 +213,7 @@ def gen_lut_modules (wsrd, INDEX_WIDTH, O_WIDTH, path, coin = True):
 
 def gen_lut_overgrouped (wsrd, INDEX_WIDTH, O_WIDTH, path, coin=True):
     if coin==True:
-        model = wsrd.model_bc
+        model = wsrd.model_coin
     else:
         model = wsrd.model
         
@@ -360,7 +360,7 @@ def gen_lut_gates (wsrd, INDEX_WIDTH, O_WIDTH, path):
     
 def gen_lut_ungrouped (wsrd, INDEX_WIDTH, O_WIDTH, path, coin=True):
     if coin==True:
-        model = wsrd.model_bc
+        model = wsrd.model_coin
     else:
         model = wsrd.model
         
@@ -394,3 +394,76 @@ def gen_lut_ungrouped (wsrd, INDEX_WIDTH, O_WIDTH, path, coin=True):
         text_file = open(path+"wisard_lut_ungrouped_lw.v", "w")        
     text_file.write(code)
     text_file.close()    
+
+
+
+def gen_lut_grouped_python (wsrd, path, coin=True):
+    if coin==True:
+        model = wsrd.model_coin
+    else:
+        model = wsrd.model
+
+    # LUT v2 #############################################################
+    # code = '\nADDR_WIDTH=%d\nINDEX_WIDTH=%d\nO_WIDTH=%d\n' % (wsrd.address_size,INDEX_WIDTH,O_WIDTH)
+    # code += '(input [ADDR_WIDTH-1:0] addr, input [INDEX_WIDTH-1:0] index, output [O_WIDTH-1:0] out);\n\n'
+    # code += '\nreg [%d:0] out_v [0:%d];\n\n' % (O_WIDTH-1,len(model[wsrd.classes[0]])-1)
+    # code += '\nassign out = out_v[index];\n\n'      
+    
+    # ibits= 16; obits = 12;
+    # h3 = gen_h3(ibits, obits)    
+    # addr_size = obits
+    
+    # addr_size = wsrd.address_size
+    
+    code = 'tables = []\n\n'
+    
+    for r in range(len(model[wsrd.classes[0]])):
+        # code += '\nreg [%d:0] out%d;\n' % (N_CLASSES-1, r)
+        code += 'table_tmp = {}\n'
+        unified_ram = {}
+        for c in range (len(wsrd.classes)):
+            dict_tmp =model[wsrd.classes[c]][r]
+            for a in dict_tmp:
+                ai = int(a)
+                bit = int((dict_tmp[a]+1)/2)
+                if ai in unified_ram:
+                    unified_ram[ai] = unified_ram[ai] | (bit<<c)
+                else:
+                    unified_ram[ai] = bit<<c
+  
+
+        for u in unified_ram:
+            u_addr = u
+            
+            ## Binary printing - addr and data (debug)
+            # u_addr = "{0:016b}".format(u_addr)
+            # bin_data = "{0:010b}".format(unified_ram[u])            
+            
+            # # only most significant
+            # shift = get_rightmost(unified_ram[u])               
+            # if shift>2:
+            #     bin_data = "{0:010b}".format( 1 << shift-1 )
+            # elif shift==0:
+            #     bin_data = '0000000000'
+            # ########################
+            
+            # code += '    %d\'b%s: out_v[%d] = %d\'b%s;\n' % (addr_size,u_addr,r, O_WIDTH,bin_data)
+            
+            ## Decimal printing
+            code += 'table_tmp[%d] = %d\n' % (u_addr,unified_ram[u])
+            
+            if unified_ram[u]==0:
+                print("### WARNING - Unified RAM position with all zeros (will be treated as absent case)")
+            
+        code += 'tables.append(table_tmp)\n\n' 
+    
+
+
+    # code += '\nendmodule'
+    
+    if coin==True:
+        text_file = open(path+"wisard_lut.py", "w")
+    else:
+        text_file = open(path+"wisard_lut_lw.py", "w")
+    text_file.write(code)
+    text_file.close() 

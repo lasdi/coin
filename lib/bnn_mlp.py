@@ -86,7 +86,7 @@ def bnn_mlp (config, X_train, y_train, X_test, y_test, lw_model):
     #class_weights_v = {0: 0.77934463, 1: 0.00910069, 2: 0.09746169, 3: 0.00104672, 4: 0.11304626}
     class_weights_v = None
 
-    model.set_weights(lw_model.create_bc_from_model(model.get_weights()))
+    model.set_weights(lw_model.create_coin_from_model(model.get_weights()))
 
     lr_scheduler = LearningRateScheduler(lambda e: LR_START * LR_DECAY ** e)
     history = model.fit(X_train, Y_train,

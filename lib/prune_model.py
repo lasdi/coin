@@ -13,7 +13,7 @@ import time
 import datetime
 from wisard_tools import eval_predictions
 
-def eval_model (project_name, config, filename):
+def prune_model (project_name, config, filename):
 
     out_dir = config['PROJ_DIR']+'/out/'
     CLASSES = ['CLASSES']  
@@ -37,17 +37,19 @@ def eval_model (project_name, config, filename):
     n_export = config['N_TEST']
     X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test = load_data(config)
     Y_test_pred = coin_model.classify(X_test_lst, coin=True)
-    acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=True)   
+    acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)   
+    print("Test set accuracy:", acc_test)
+    print("Number of minterms:", coin_model.get_minterms_info())
+   
+    coin_model.pruning(X_test_lst, Y_test, 0.8)
+
+    Y_test_pred = coin_model.classify(X_test_lst, coin=True)
+    acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)   
     print("Test set accuracy:", acc_test)
     print("Number of minterms:", coin_model.get_minterms_info())
     
-    
-    
-    
-    # print('\n>>> Generating RTL...')
-    # coin_model.export2verilog(out_dir+'/rtl/', X_test_lst[0:n_export,:], Y_test_pred[0:n_export])    
-    
     print( "\n\n--- Ensembles evaluation executed in %.02f seconds ---" % (time.time() - start_time))   
+       
     
 if __name__ == "__main__":
     sys.path.insert(0, '../lib/')
@@ -57,7 +59,7 @@ if __name__ == "__main__":
         filename = sys.argv[2]
     else:
         project_name = 'mnist'    
-        filename = '../mnist/out/coin_2022-09-09_12-22-14_2.pkl'
+        filename = '../mnist/out/coin_2022-09-09_12-22-14_0.pkl'
     config = load_config('../'+project_name)  
     
-    eval_model(project_name, config, filename)      
+    prune_model(project_name, config, filename)      

@@ -12,7 +12,7 @@ example:
 SEED = 32
 # Number of threads requested simultaneously. Used for both
 # LogicWiSARD and COIN training.
-N_THREADS = 5
+N_THREADS = 1
 # Enables plots throughout trainings. Doing this for multiple
 # may be messy
 DO_PLOTS = False
@@ -22,7 +22,7 @@ VERBOSE = True
 CLASSES = ['0','1','2','3','4','5','6','7','8','9']
 # Number of samples available for training. It can be reduced
 # for speed. 
-N_TRAIN = 30000
+N_TRAIN = 60000
 # Number of samples to be used in validation during LogicWiSARD
 # generation only. This will be taken from the train set defined
 # above. For ex., if N_TRAIN=60000 and N_VAL=5000, then 55000
@@ -35,9 +35,8 @@ N_TEST = 10000
 # Address size of LogicWiSARD models.
 ADDRESS_SIZE = 16
 # Thermometer resolution, if this encoding is used
-THERMO_RESOLUTION = 2
-# Enables the Hamming reduction method
-DO_HAMMING = False
+THERMO_RESOLUTION = 8
+
 
 #################### LogicWiSARD ####################
 
@@ -52,15 +51,20 @@ SORT_MODELS_BY = 'accuracy'
 MIN_THRESHOLD = 1
 # Maximum value for the threshold search
 MAX_THRESHOLD = 100
+
+# If True, the threshold search will find the smallest models whose accuracy is
+# above maximum accuracy minus ACC_DELTA. Otherwise, it will search for the best
+# accuracy models whose number of minterms is below MINTERMS_MAX.
+OPT_ACC_FIRST = True
 # Sets the accuracy tolerance below the maximum accuracy 
 # while searching for the threshold. In other words,
 # thresholds that produces models within this range are
 # considered to be chosen
 ACC_DELTA = 0.05
-# Sets how many threshold search attempts it tries before stopping
-ACC_PATIENCE = 20
-
-
+# Maximum number of minterms
+MINTERMS_MAX = 100000
+# If selected, it will search for a multidimensional threshold, across classes and RAMs
+MULTIDIM_THRESHOLD = False
 #################### BNN ####################
 
 # Sets the maximum number of models to train. -1 to train all models

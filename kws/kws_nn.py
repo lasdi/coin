@@ -29,7 +29,7 @@ os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 np.random.seed(56)
 
 # Types: mlp, cnn
-nn_type = 'cnn'
+nn_type = 'mlp'
 
 # fp_classes = open('./speech_commands_v0.02/classes.txt', 'r')
 # CLASSES = fp_classes.readlines()
@@ -39,12 +39,12 @@ nn_type = 'cnn'
 
 
 config = {}
-config['THERMO_RESOLUTION'] = 2
+config['THERMO_RESOLUTION'] = 4
 config['CLASSES'] = ["down", "go", "left", "no", "off", "on", "right",
                      "stop", "up", "yes", "unknown"]  #, "silence"
 CLASSES = config['CLASSES']
 
-X_train, Y_train, X_val, Y_val, X_test, Y_test = load_data(config, do_encoding=False)
+X_train, Y_train, X_val, Y_val, X_test, Y_test = load_data(config, do_encoding=True)
 
 Y_train = to_categorical(Y_train)
 Y_test = to_categorical(Y_test)
@@ -54,7 +54,7 @@ if nn_type=='mlp':
     X_train = X_train.reshape((X_train.shape[0],-1))
     X_val = X_val.reshape((X_val.shape[0],-1))
     X_test = X_test.reshape((X_test.shape[0],-1))
-    hidden_neurons = 256
+    hidden_neurons = 128
     ann_model = Sequential()
     ann_model.add(Dense(hidden_neurons, activation='relu', input_shape=(X_train.shape[1],)))
     ann_model.add(Dense(hidden_neurons, activation='relu'))
@@ -78,7 +78,9 @@ elif nn_type=='cnn':
 
 ann_model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
-ann_model_history = ann_model.fit(X_train, Y_train,validation_data=(X_val, Y_val), epochs=50, batch_size = 100)
+ann_model.summary()
+
+ann_model_history = ann_model.fit(X_train, Y_train,validation_data=(X_val, Y_val), epochs=10, batch_size = 100)
 
 print(">>> Test set evaluation...")
 y_true=[]

@@ -9,24 +9,28 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import sys
 
 
 
 def separate_classes (X, Y, classes, address_size):
+       
     n_rams = int(X.shape[1]/address_size)
     
     X_class = {}
     
     for c in range (len(classes)):
         X_class_t = np.empty((0,n_rams),dtype=int)
-        for i in range (X.shape[0]):
-            if int(Y[i])==c:
-                xt = X[i,:].reshape(-1, address_size)
-                xti = xt.dot(1 << np.arange(xt.shape[-1] - 1, -1, -1))
-                X_class_t = np.vstack([X_class_t, xti.reshape(1,-1)])
+        c_i = np.where(Y==c)[0]
+        for i in c_i:        
+        # for i in range (X.shape[0]):
+            # if int(Y[i])==c:
+            xt = X[i,:].reshape(-1, address_size)
+            xti = xt.dot(1 << np.arange(xt.shape[-1] - 1, -1, -1))
+            X_class_t = np.vstack([X_class_t, xti.reshape(1,-1)])
     
         X_class[classes[c]] = X_class_t
+        
     return X_class
 
 

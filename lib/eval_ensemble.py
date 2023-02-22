@@ -21,7 +21,6 @@ from multikernel import classify_mk
 def eval_ensemble (project_name, config):
 
     DO_PLOTS = config['DO_PLOTS']
-    DO_HAMMING = config['DO_HAMMING']
     CLASSES = config['CLASSES']
     
     out_dir = config['PROJ_DIR']+'/out/'
@@ -64,7 +63,7 @@ def eval_ensemble (project_name, config):
             coin_models.append(pickle.load(inp))
     
         write2file("Address size: "+str(coin_models[m].address_size))
-        Y_test_pred = coin_models[m].classify(X_test_lst, hamming=DO_HAMMING, bc=True)
+        Y_test_pred = coin_models[m].classify(X_test_lst, coin=True)
         acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)    
         
         word_cnt, max_value = coin_models[m].get_mem_info()
@@ -75,7 +74,7 @@ def eval_ensemble (project_name, config):
     
     write2file('\nTotal number of minterms: '+str(total_minterms))                    
     write2file('\n>>> Evaluating test set...')
-    Y_test_pred = classify_mk(coin_models, X_test_lst, Y_test, hamming=DO_HAMMING, bc=True)
+    Y_test_pred = classify_mk(coin_models, X_test_lst, Y_test, coin=True)
     
     acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=DO_PLOTS)    
     write2file(f'\n>>> Test set accuracy: {acc_test:.01%}') 

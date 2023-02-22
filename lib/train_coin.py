@@ -15,8 +15,8 @@ import matplotlib.pyplot as plt
 import os
 import time
 import datetime
-# from bnn_mlp import bnn_mlp
-from brevitas_bnn_mlp import bnn_mlp
+from bnn_mlp import bnn_mlp
+# from brevitas_bnn_mlp import bnn_mlp
 from keras.utils import np_utils
 # from sklearn.metrics import accuracy_score
 import pandas as pd
@@ -31,7 +31,6 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     global g_weights
     DO_PLOTS = config['DO_PLOTS']
     VERBOSE = config['VERBOSE']
-    DO_HAMMING = config['DO_HAMMING']
     CLASSES = config['CLASSES']
     N_THREADS = config['N_THREADS']
     
@@ -45,40 +44,35 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     
     # word_cnt, max_value = mWisard.get_mem_info()
     # minterms_cnt = mWisard.get_minterms_info()
-    # write2file('> Pre-BC test ACC: %f / Number of words: %d / Number of minterms: %d' % (acc_test, word_cnt, minterms_cnt))    
+    # write2file('> Pre-coin test ACC: %f / Number of words: %d / Number of minterms: %d' % (acc_test, word_cnt, minterms_cnt))
 
     # These lines below shouldn't be needed but every second loop
     # it stores information from previous loop even if
     # the object is deleted. I may not know python enough.
-    mWisard.bc_encoded_rams = []
-    mWisard.model_bc = {}
-    mWisard.bc_total_minterms = 0
-    mWisard.bc_weights = 0  
+    mWisard.coin_encoded_rams = []
+    mWisard.model_coin = {}
+    mWisard.coin_total_minterms = 0
+    mWisard.coin_weights = 0
     minterms_cnt = mWisard.get_minterms_info()
     # write2file('\nNumber of minterms: '+str(minterms_cnt))        
     lw_minterms[m] = minterms_cnt
     
-    if DO_HAMMING:
-        # write2file('\n>>> Generate hamming model...')
-        mWisard.gen_hamming_model()
-        mWisard.model = mWisard.model_hamm
-
              
-    X_train_bc = mWisard.gen_bc_encode(X_train_lst, hamming=DO_HAMMING)
-    X_val_bc = mWisard.gen_bc_encode(X_val_lst, hamming=DO_HAMMING)
-    X_test_bc = mWisard.gen_bc_encode(X_test_lst, hamming=DO_HAMMING)
+    X_train_coin = mWisard.gen_coin_encode(X_train_lst)
+    X_val_coin = mWisard.gen_coin_encode(X_val_lst)
+    X_test_coin = mWisard.gen_coin_encode(X_test_lst)
     
     # write2file(">>> Starting BNN training...")
-    model_bc, history = bnn_mlp(config, X_train_bc, Y_train, X_val_bc, Y_val, mWisard)
+    model_coin, history = bnn_mlp(config, X_train_coin, Y_train, X_val_coin, Y_val, mWisard)
 
-    # X_test_bc = mWisard.gen_bc_encode(X_test_lst, hamming=DO_HAMMING)
-    Y_test_bc = np_utils.to_categorical(Y_test, len(CLASSES)) * 2 - 1
+    # X_test_coin = mWisard.gen_coin_encode(X_test_lst)
+    Y_test_coin = np_utils.to_categorical(Y_test, len(CLASSES)) * 2 - 1
     
-    # score = model_bc.evaluate(X_test_bc, Y_test_bc, verbose=0)
-    # write2file('>>> BC Test score:', score[0])
-    # write2file('>>> BC Test accuracy:', score[1])
+    # score = model_coin.evaluate(X_test_coin, Y_test_coin, verbose=0)
+    # write2file('>>> coin Test score:', score[0])
+    # write2file('>>> coin Test accuracy:', score[1])
     
-    weights = model_bc.get_weights()
+    weights = model_coin.get_weights()
     # g_weights = copy.deepcopy(weights)
     w_thrd = 0.0*np.max(weights[0])
     for i in range (weights[0].shape[0]):
@@ -87,23 +81,23 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
         for j in range (weights[0].shape[1]):
             weights[0][i,j] = 1 if weights[0][i,j] >= w_thrd else -1
     
-    model_bc.set_weights(weights)
-    score = model_bc.evaluate(X_test_bc, Y_test_bc, verbose=int(VERBOSE))
-    # write2file('>>> BC clipped Test accuracy: ' +str(score[1]))
+    model_coin.set_weights(weights)
+    score = model_coin.evaluate(X_test_coin, Y_test_coin, verbose=int(VERBOSE))
+    # write2file('>>> coin clipped Test accuracy: ' +str(score[1]))
     lw_accs_float[m] = score[1]
-    # Y_test_bc_pred = model_bc.predict_on_batch(X_test_bc)
+    # Y_test_coin_pred = model_coin.predict_on_batch(X_test_coin)
 
-    ################## BC-Wisard ############################
+    ################## coin-Wisard ############################
     
-    # write2file('\n>>> Evaluating post-bc test set...')
-    mWisard.create_model_from_bc (weights)
+    # write2file('\n>>> Evaluating post-coin test set...')
+    mWisard.create_model_from_coin (weights)
 
-    Y_test_pred = mWisard.classify(X_test_lst, hamming=DO_HAMMING, bc=True)
+    Y_test_pred = mWisard.classify(X_test_lst, coin=True)
     acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=DO_PLOTS)  
     # write2file('>>> Post-BNN Test set accuracy: ' +str(acc_test)) 
     # acc_test2 = accuracy_score(Y_test, Y_test_pred)
     # write2file('>>> Post-BNN Test set accuracy2: ' +str(acc_test2))
-    del X_test_bc    
+    del X_test_coin
     lw_accs[m] = acc_test
     
     ################# Save results ##########################
@@ -112,7 +106,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
         pickle.dump(mWisard, outp, pickle.HIGHEST_PROTOCOL)
     
     # import copy
-    # mWisard.model = copy.deepcopy(mWisard.model_bc)
+    # mWisard.model = copy.deepcopy(mWisard.model_coin)
     # write2file("> COIN ones count: %d" % (mWisard.get_minterms_info(bits_on=True)))
     
     del mWisard

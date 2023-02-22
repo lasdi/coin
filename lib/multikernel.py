@@ -6,34 +6,31 @@ Created on Fri Mar 11 11:47:12 2022
 @author: igor
 """
 import numpy as np
-from discriminator import discriminator_train, discriminator_eval, discriminator_eval_bc
+from discriminator import discriminator_train, discriminator_eval, discriminator_eval_coin
 from wisard_tools import separate_classes, eval_predictions
-from hamming import hamming_correction
 import matplotlib.pyplot as plt
 from statistics import mode
 import math
 
-def wisard_eval_bin_mk (X, model, mapping, classes, address_size, threshold=1, hamming=False, bc_weights='',n_minterms=0):
+def wisard_eval_bin_mk (X, model, mapping, classes, address_size, threshold=1, coin_weights='',n_minterms=0):
     n_samples = X.shape[0]
     X_mapped = X[:,mapping]
     epsilon = 1e-6
     # Glorot correction
-    bc_h = np.float32(np.sqrt(1.5 / (n_minterms + len(classes))))
+    coin_h = np.float32(np.sqrt(1.5 / (n_minterms + len(classes))))
 
     # Tau values for thresholding as in FINN
     tau = np.zeros((len(classes)))
     tau_inv = np.ones((len(classes)))
     for c in range (len(classes)):
-        gamma = bc_weights[1][c]; mov_mean = bc_weights[3][c]; mov_var = bc_weights[4][c]; beta = bc_weights[2][c];
+        gamma = coin_weights[1][c]; mov_mean = coin_weights[3][c]; mov_var = coin_weights[4][c]; beta = coin_weights[2][c];
         tau[c] = mov_mean - (beta/(gamma/np.sqrt(mov_var)))
-        tau[c] = math.ceil(tau[c]/bc_h) # Glorot correction
+        tau[c] = math.ceil(tau[c]/coin_h) # Glorot correction
         # This correction is not needed. Here just to show the diff from original paper
         # tau[c] = int((tau[c]+n_minterms)/2) 
         if (gamma/np.sqrt(mov_var+epsilon))<0:
             tau_inv[c] = -1
     
-    if hamming:
-        X_mapped = hamming_correction(X_mapped, address_size)
         
     # Eval for each sample
     scores = np.zeros((n_samples, len(classes)))
@@ -46,11 +43,11 @@ def wisard_eval_bin_mk (X, model, mapping, classes, address_size, threshold=1, h
         ####### Binarized model ####################
             
         for c in range (len(classes)):
-            scores[n,c] = discriminator_eval_bc(xti.astype(int), model[classes[c]], threshold)
+            scores[n,c] = discriminator_eval_coin(xti.astype(int), model[classes[c]], threshold)
             
             # Batch normalization correction
-            # scores[n,c] *= bc_h
-            # gamma = bc_weights[1][c]; mov_mean = bc_weights[3][c]; mov_var = bc_weights[4][c]; beta = bc_weights[2][c];
+            # scores[n,c] *= coin_h
+            # gamma = coin_weights[1][c]; mov_mean = coin_weights[3][c]; mov_var = coin_weights[4][c]; beta = coin_weights[2][c];
             # scores[n,c] = gamma*(scores[n,c] - mov_mean)/np.sqrt(mov_var + epsilon) + beta
             
             # Batch normalization correction (thresholding as in FINN)
@@ -65,7 +62,7 @@ def wisard_eval_bin_mk (X, model, mapping, classes, address_size, threshold=1, h
 
 
 
-def classify_mk (models, X, Y_test, hamming=False, bc = False):
+def classify_mk (models, X, Y_test, coin = False):
     """
     Runs the trained classifier on X data.
 
@@ -87,17 +84,15 @@ def classify_mk (models, X, Y_test, hamming=False, bc = False):
     for m in range(n_models):
         lw = models[m]
         
-        if bc:
-            model_arg = lw.model_bc   
-        elif hamming:
-            model_arg = lw.model_hamm         
+        if coin:
+            model_arg = lw.model_coin
         else:
             model_arg = lw.model
              
     
         t_scores = wisard_eval_bin_mk(X, model_arg, lw.mapping, lw.classes, 
                              lw.address_size, threshold=lw.min_threshold, 
-                             hamming=hamming, bc_weights=lw.bc_weights,n_minterms=lw.get_minterms_info())
+                             coin_weights=lw.coin_weights,n_minterms=lw.get_minterms_info())
         scores[m,:,:] = t_scores
     
     
