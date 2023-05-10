@@ -24,10 +24,11 @@ import pandas as pd
 # import shutil
 import threading
 import copy
+from eval_imbalanced import eval_imbalanced
 
 def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test):
        
-    global lw_accs, lw_accs_float, lw_minterms, lw_filenames
+    global test_accs, test_accs_float, test_minterms, coin_filenames, test_sens, test_spec, test_auc, val_accs, val_auc
     global g_weights
     DO_PLOTS = config['DO_PLOTS']
     VERBOSE = config['VERBOSE']
@@ -55,7 +56,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     mWisard.coin_weights = 0
     minterms_cnt = mWisard.get_minterms_info()
     # write2file('\nNumber of minterms: '+str(minterms_cnt))        
-    lw_minterms[m] = minterms_cnt
+    test_minterms[m] = minterms_cnt
     
              
     X_train_coin = mWisard.gen_coin_encode(X_train_lst)
@@ -84,7 +85,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     model_coin.set_weights(weights)
     score = model_coin.evaluate(X_test_coin, Y_test_coin, verbose=int(VERBOSE))
     # write2file('>>> coin clipped Test accuracy: ' +str(score[1]))
-    lw_accs_float[m] = score[1]
+    test_accs_float[m] = score[1]
     # Y_test_coin_pred = model_coin.predict_on_batch(X_test_coin)
 
     ################## coin-Wisard ############################
@@ -93,12 +94,29 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     mWisard.create_model_from_coin (weights)
 
     Y_test_pred = mWisard.classify(X_test_lst, coin=True)
-    acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=DO_PLOTS)  
+    Y_val_pred = mWisard.classify(X_val_lst, coin=True)
+    
+    if len(CLASSES)>2:
+        acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=DO_PLOTS)  
+        acc_val = eval_predictions(Y_val, Y_val_pred, CLASSES, do_plot=DO_PLOTS) 
+        auc_val = 0
+        auc_test = 0;
+        sensitivities = specificities = [0,0]
+    else:
+        sensitivities, specificities, acc_test, auc_test = eval_imbalanced(Y_test, Y_test_pred, CLASSES, do_plot=DO_PLOTS)
+        sensitivities_val, specificities_val, acc_val, auc_val = eval_imbalanced(Y_val, Y_val_pred, CLASSES, do_plot=DO_PLOTS)
+    
     # write2file('>>> Post-BNN Test set accuracy: ' +str(acc_test)) 
     # acc_test2 = accuracy_score(Y_test, Y_test_pred)
     # write2file('>>> Post-BNN Test set accuracy2: ' +str(acc_test2))
     del X_test_coin
-    lw_accs[m] = acc_test
+    test_accs[m] = acc_test
+    test_sens[m] = sensitivities[1]
+    test_spec[m] = specificities[1]
+    test_auc[m] = auc_test
+    val_accs[m] = acc_val
+    val_auc[m] = auc_val
+    
     
     ################# Save results ##########################
     coin_filename = filename.replace('lw','coin')
@@ -111,7 +129,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     
     del mWisard
     
-    lw_filenames[m] = coin_filename
+    coin_filenames[m] = coin_filename
     if DO_PLOTS:
         plt.figure(0)
         plt.plot(history.history['acc'])
@@ -122,7 +140,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     
 def train_coin(project_name, config):
 
-    global lw_accs, lw_accs_float, lw_minterms, lw_filenames
+    global test_accs, test_accs_float, test_minterms, coin_filenames, test_sens, test_spec, test_auc, val_accs, val_auc
     global g_weights
     SEED = config['SEED']
     N_THREADS = config['N_THREADS']
@@ -167,11 +185,15 @@ def train_coin(project_name, config):
     else:
         n_lw_models = len(filenames)
 
-    lw_accs = [None]*n_lw_models
-    lw_accs_float = [None]*n_lw_models
-    lw_minterms = [None]*n_lw_models  
-    lw_filenames = [None]*n_lw_models  
-    
+    val_accs = [None]*n_lw_models
+    val_auc = [None]*n_lw_models
+    test_accs = [None]*n_lw_models
+    test_accs_float = [None]*n_lw_models
+    test_minterms = [None]*n_lw_models  
+    coin_filenames = [None]*n_lw_models  
+    test_sens = [None]*n_lw_models
+    test_spec = [None]*n_lw_models
+    test_auc = [None]*n_lw_models
 
     if N_THREADS>1:
         for model_i in range(0,n_lw_models, N_THREADS):
@@ -201,10 +223,15 @@ def train_coin(project_name, config):
     # print(g_weights[0].shape)
     
     df = pd.DataFrame()
-    df['filename'] = lw_filenames
-    df['n_minterms'] = lw_minterms
-    df['acc_float'] = lw_accs_float
-    df['acc_fixed'] = lw_accs
+    df['filename'] = coin_filenames
+    df['n_minterms'] = test_minterms
+    df['acc_fixed_val'] = val_accs
+    df['auc_val'] = val_auc
+    df['acc_float'] = test_accs_float
+    df['acc_fixed'] = test_accs
+    df['sensitivity'] = test_sens
+    df['specificity'] = test_spec
+    df['auc'] = test_auc
     df.to_csv(out_dir+"/res_coin_"+datetime_string+".csv")
     
     write2file( "\n\n--- COIN training Executed in %.02f seconds ---" % (time.time() - start_time))   

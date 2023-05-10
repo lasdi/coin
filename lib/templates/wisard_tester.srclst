@@ -1,0 +1,11 @@
+// Wisard files
+./rom_tester_in.sv
+./rom_tester_lo.sv
+./rom_tester_out.sv
+./wisard_tester.sv
+./wisard_lut.v
+./wisard_ctrl.v
+./wisard_parallel2serial.v
+./wisard_index.v
+./wisard.v
+./tb_wisard_tester.sv

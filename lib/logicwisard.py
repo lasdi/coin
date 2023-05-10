@@ -348,7 +348,7 @@ class logicwisard:
         I_WIDTH = self.address_size + INDEX_WIDTH
         
         O_WIDTH = len(self.classes)
-        
+        N_RAMS = int(math.ceil(x_dim/self.address_size))
         # Mapping
         
         code = 'module wisard_mapping\n'
@@ -374,21 +374,7 @@ class logicwisard:
         
 
         # Generate verilog LUTs
-        # wsd_lut.gen_lut_grouped (self, INDEX_WIDTH, O_WIDTH, path)
         wsd_lut.gen_lut_grouped (self, INDEX_WIDTH, O_WIDTH, path, coin=coin)
-        
-        ## Previous attempts for LUT design 
-        # wsd_lut.gen_lut_overgrouped (self, I_WIDTH,O_WIDTH, path)
-        # wsd_lut.gen_lut_overgrouped (self, I_WIDTH,O_WIDTH, path, coin=coin)
-        # wsd_lut.gen_lut_gates (self, I_WIDTH,O_WIDTH, path)
-        # wsd_lut.gen_lut_modules (self, I_WIDTH,O_WIDTH, path)
-        # wsd_lut.gen_lut_modules (self, I_WIDTH,O_WIDTH, path, coin=coin)
-        # wsd_lut.gen_lut_ungrouped (self, I_WIDTH,O_WIDTH, path)
-        # wsd_lut.gen_lut_ungrouped (self, I_WIDTH,O_WIDTH, path, coin=coin)
-        
-        #######################################################################
-        
-        
         
         ## Transfering template files
         os.system("cp ../lib/templates/*.v "+path)
@@ -400,19 +386,29 @@ class logicwisard:
         
         ## Set testbench parameters
         tb_params = 'localparam ADDRESS_WIDTH = %d;\n' % (int(self.address_size))
-        tb_params += 'localparam N_RAMS = %d;\n' % (int(math.ceil(x_dim/self.address_size)))
+        tb_params += 'localparam N_RAMS = %d;\n' % (N_RAMS)
         tb_params += 'localparam INDEX_WIDTH = %d;\n' % (int(math.ceil(math.log2(x_dim/self.address_size))))
         tb_params += 'localparam N_CLASSES = %d;\n' % (len(self.classes))
         tb_params += 'localparam CLASS_WIDTH = %d;\n' % (int(math.ceil(math.log2(len(self.classes)))))
         tb_params += 'localparam N_INPUTS = %d;\n' % (X.shape[0])
                 
-        text_file = open(path+'/tb_wisard.v')
+        # For parallel implementation
+        text_file = open(path+'/tb_wisard_parallel.v')
         tb_param_v = text_file.read()
         text_file.close()
         tb_param_v = tb_param_v.replace('//__AUTO_PARAMETERS__', tb_params)
-        text_file = open(path+'/tb_wisard.v', "w")
+        text_file = open(path+'/tb_wisard_parallel.v', "w")
         text_file.write(tb_param_v)
         text_file.close()
+        
+        # For serial implementation
+        text_file = open(path+'/tb_wisard_serial.v')
+        tb_param_v = text_file.read()
+        text_file.close()
+        tb_param_v = tb_param_v.replace('//__AUTO_PARAMETERS__', tb_params)
+        text_file = open(path+'/tb_wisard_serial.v', "w")
+        text_file.write(tb_param_v)
+        text_file.close()        
         
         ## Set wisard parameters
         if coin:        
@@ -420,26 +416,39 @@ class logicwisard:
             wsd_param_v = text_file.read()
             text_file.close()
             wsd_param_v = wsd_param_v.replace('__ADDRESS_WIDTH__', str(int(self.address_size)))
-            wsd_param_v = wsd_param_v.replace('__INDEX_WIDTH__', str(int(math.ceil(math.log2(x_dim/self.address_size)))))
+            index_width_t = int(math.ceil(math.log2(x_dim/self.address_size)))
+            wsd_param_v = wsd_param_v.replace('__INDEX_WIDTH__', str(index_width_t))
+            wsd_param_v = wsd_param_v.replace('__N_RAMS__', str(N_RAMS)) 
             wsd_param_v = wsd_param_v.replace('__N_CLASSES__', str(len(self.classes)))
             wsd_param_v = wsd_param_v.replace('__CLASS_WIDTH__', str(int(math.ceil(math.log2(len(self.classes))))))
+            
+            text_file = open(path+'/wisard.v', "w")
+            text_file.write(wsd_param_v)
+            text_file.close()
+
+
+            # Tau insertion in wisard_crtl
             from tau_gen import tau_gen
-            # Tau insertion
+            text_file = open(path+'/wisard_ctrl.v')
+            wsd_param_ctrl_v = text_file.read()
+            text_file.close()
             tau = tau_gen (self.coin_weights, self.get_minterms_info(), len(self.classes))
-            tau_width = int(math.ceil(math.log2(max(tau))))+1
+            tau_width = index_width_t+1
             tau_str = "wire signed [%d:0] TAU [0:%d];\n" % (tau_width-1, len(self.classes)-1)
             tau_str += "wire signed [%d:0] TAU_PLUS1 [0:%d];\n" % (tau_width-1, len(self.classes)-1)
             tau_str += "wire signed [%d:0] TAU_MINUS1 [0:%d];\n" % (tau_width-1, len(self.classes)-1)
             
             for i in range(len(tau)):
-               tau_str += "assign TAU[%d] = -%d'd%d;\n" % (i,tau_width, tau[i])
-               tau_str += "assign TAU_PLUS1[%d] = -%d'd%d;\n" % (i, tau_width, tau[i] - 1)
-               tau_str += "assign TAU_MINUS1[%d] = -%d'd%d;\n" % (i, tau_width, tau[i] + 1)
-            wsd_param_v = wsd_param_v.replace('__TAU_PARAMETERS__', tau_str)
-            
-            text_file = open(path+'/wisard.v', "w")
-            text_file.write(wsd_param_v)
-            text_file.close()
+               sign = '-' if tau[i] >0 else ''
+               tau_str += "assign TAU[%d] = %s%d'd%d;\n" % (i,sign,tau_width, abs(tau[i]))
+               sign = '-' if tau[i]-1 >0 else ''
+               tau_str += "assign TAU_PLUS1[%d] = %s%d'd%d;\n" % (i,sign, tau_width, abs(tau[i] - 1))
+               sign = '-' if tau[i]+1 >0 else ''
+               tau_str += "assign TAU_MINUS1[%d] = %s%d'd%d;\n" % (i,sign, tau_width, abs(tau[i] + 1))
+            wsd_param_ctrl_v = wsd_param_ctrl_v.replace('__TAU_PARAMETERS__', tau_str)
+            text_file = open(path+'/wisard_ctrl.v', "w")
+            text_file.write(wsd_param_ctrl_v)
+            text_file.close()            
         
         ## Exporting data
         if export_data:
@@ -462,26 +471,7 @@ class logicwisard:
                 text_file = open(path+fname, "w")
                 text_file.write(txt_i)
                 text_file.close()
-    
-            # #### DEBUG ########
-            # X_mapped = X[:,self.mapping]
-            # txt_o = ''
-            # for n in range (n_samples):
-            #     xt = X_mapped[n,:].reshape(-1, self.address_size)
-            #     #xt = np.flip(xt, axis=1) # flip to correct endianess
-    
-            #     xti = xt.dot(1 << np.arange(xt.shape[-1] - 1, -1, -1))
-            #     txt_i = ''            
-            #     for m in range (len(xti)):
-            #         txt_i += '%04x\n' % (int(xti[m]))
-            #         # print(int(xti[m]))
-                
-            #     txt_o += str(int(Y[n]))+'\n'
-            #     fname = "data/m_in%04d.txt" % (n)    
-            #     text_file = open(path+fname, "w")
-            #     text_file.write(txt_i)
-            #     text_file.close()
-            #########################
+
             
             fname = "data/y_pred_sw.txt"
             text_file = open(path+fname, "w")
@@ -508,8 +498,8 @@ class logicwisard:
             Verilog code.
 
         """
+        O_WIDTH = len(self.classes)
         
         ## Exporting verilog code
-        
-        wsd_lut.gen_lut_grouped_python (self, path, coin=coin)
+        wsd_lut.gen_lut_grouped_python (self, O_WIDTH, path, coin=coin)
         

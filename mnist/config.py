@@ -29,13 +29,13 @@ N_TRAIN = 60000
 # samples will be used to train LogicWiSARD and 5000 for threshold
 # search. In this case, BNN training will used the whole 60000 set
 # for training.
-N_VAL = 5000
+N_VAL = 2000
 # Number of samples available for test.
 N_TEST = 10000
 # Address size of LogicWiSARD models.
-ADDRESS_SIZE = 16
+ADDRESS_SIZE = 12
 # Thermometer resolution, if this encoding is used
-THERMO_RESOLUTION = 8
+THERMO_RESOLUTION = 2
 
 
 #################### LogicWiSARD ####################
@@ -60,7 +60,7 @@ OPT_ACC_FIRST = True
 # while searching for the threshold. In other words,
 # thresholds that produces models within this range are
 # considered to be chosen
-ACC_DELTA = 0.05
+ACC_DELTA = 0.005
 # Maximum number of minterms
 MINTERMS_MAX = 100000
 # If selected, it will search for a multidimensional threshold, across classes and RAMs

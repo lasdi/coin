@@ -29,7 +29,7 @@ os.system('rm -rf ./out/rtl')
 
 # Generates and trains 3 LogicWiSARD models, picking up 
 # the most accurate.
-config['N_THREADS'] = 10
+config['N_THREADS'] = 1
 gen_logicwisard(project_name, config)
 
 # Convert LogicWiSARD to BNN, train it, and then convert to COIN

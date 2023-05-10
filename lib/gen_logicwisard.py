@@ -21,7 +21,7 @@ import threading
 
 # This is the training function to be called as a thread
 def train_thread(epoch,config,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst, Y_test):
-    global bin_acc,bin_acc_test,bin_mem,bin_minterms,bin_models
+    global bin_acc,bin_acc_val,bin_mem,bin_minterms,bin_models
     
     write2file('> Started model %d' %(epoch))
     ADDRESS_SIZE = config['ADDRESS_SIZE']
@@ -41,8 +41,8 @@ def train_thread(epoch,config,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst
     # write2file('>>> Evaluate model...')
     # word_cnt, max_value = mWisard.get_mem_info()
     # Y_test_pred = mWisard.classify(X_test_lst)    
-    # acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)       
-    # write2file('> Pre-bin Test ACC: %f / Number of words: %d ' % (acc_test, word_cnt))       
+    # acc_val = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)       
+    # write2file('> Pre-bin Test ACC: %f / Number of words: %d ' % (acc_val, word_cnt))       
     
     ###### Binarization ######
     # write2file('>>> Searching for binarization threshold...')
@@ -52,15 +52,15 @@ def train_thread(epoch,config,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst
     
     mWisard.binarize_model()
     
-    Y_test_pred = mWisard.classify(X_test_lst)
-    acc_test = eval_predictions(Y_test, Y_test_pred, CLASSES, do_plot=False)    
+    Y_val_pred = mWisard.classify(X_val_lst)
+    acc_val = eval_predictions(Y_val, Y_val_pred, CLASSES, do_plot=False)    
     
     # word_cnt, max_value = mWisard.get_mem_info()
     minterms_cnt = mWisard.get_minterms_info()
-    # write2file('> Post-bin test ACC: %f / Number of minterms: %d' % (acc_test, minterms_cnt))
+    # write2file('> Post-bin val ACC: %f / Number of minterms: %d' % (acc_val, minterms_cnt))
     
     bin_acc[epoch] = max_acc
-    bin_acc_test[epoch] = acc_test
+    bin_acc_val[epoch] = acc_val
     bin_mem[epoch] = 0 #word_cnt
     bin_minterms[epoch] = minterms_cnt
     bin_models[epoch] = mWisard
@@ -68,7 +68,7 @@ def train_thread(epoch,config,X_train_lst, Y_train, X_val_lst, Y_val, X_test_lst
 
 # The main callable function    
 def gen_logicwisard(project_name, config):
-    global bin_acc,bin_acc_test,bin_mem,bin_minterms,bin_models
+    global bin_acc,bin_acc_val,bin_mem,bin_minterms,bin_models
     # sys.path.insert(0, './'+project_name)
     
     SEED = config['SEED']
@@ -112,7 +112,7 @@ def gen_logicwisard(project_name, config):
     write2file("Test set output: "+str(Y_test.shape))
     
     bin_acc = [None]*N_GEN_MODELS
-    bin_acc_test = [None]*N_GEN_MODELS
+    bin_acc_val = [None]*N_GEN_MODELS
     bin_mem = [None]*N_GEN_MODELS
     bin_minterms = [None]*N_GEN_MODELS
     bin_models = [None]*N_GEN_MODELS
@@ -135,17 +135,18 @@ def gen_logicwisard(project_name, config):
     
     # Plot search Results
     if DO_PLOTS:
-        plt.plot(bin_minterms, bin_acc_test,'g^')
+        plt.plot(bin_minterms, bin_acc_val,'g^')
         plt.xlabel('Number of minterms')
-        plt.ylabel('Test set accuracy')
+        plt.ylabel('Val set accuracy')
         plt.savefig(out_dir+'/model_search_minterms.pdf')
         plt.show()
        
     # Sorts by accuracy
     if SORT_MODELS_BY=='accuracy':
-        sorted_i = np.argsort(bin_acc_test)
+        sorted_i = np.argsort(bin_acc_val)
     else: #size
         sorted_i = np.argsort(bin_minterms)
+        sorted_i = np.flip(sorted_i)
     
     # Selecting the best models
     sel_i = []    
@@ -163,7 +164,7 @@ def gen_logicwisard(project_name, config):
     write2file(">>> Selected models: " )
     for m in range(len(sel_i)):
         lw_models.append(bin_models[sel_i[m]])
-        lw_accs.append(bin_acc_test[sel_i[m]])
+        lw_accs.append(bin_acc_val[sel_i[m]])
         lw_minterms.append(bin_minterms[sel_i[m]])
         write2file("> Model %d (acc/minterms): %f / %d " % (m, lw_accs[m], lw_minterms[m]))
         # write2file("> LW ones count: %d" % (lw_models[m].get_minterms_info(bits_on=True)))

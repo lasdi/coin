@@ -77,4 +77,4 @@ def eval_imbalanced(y_test, y_score, classes, do_plot=True):
         plt.ylabel('Label')
         plt.show()
     
-    return sensitivities, specificities, accuracy
+    return sensitivities, specificities, accuracy, auc

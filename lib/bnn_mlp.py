@@ -8,6 +8,7 @@ from __future__ import print_function
 import numpy as np
 import os
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
+os.environ['TF_DETERMINISTIC_OPS'] = '1'
 
 import tensorflow as tf
 import keras
@@ -18,6 +19,7 @@ from keras.layers import Dense, Dropout, Activation, BatchNormalization, Flatten
 from tensorflow.keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import LearningRateScheduler
 from keras.utils import np_utils
+import tensorflow_addons as tfa
 
 from bnn_ops import binary_tanh as binary_tanh_op
 from bnn_layers import BinaryDense, Clip
@@ -43,6 +45,9 @@ def binary_tanh(x):
     return binary_tanh_op(x)
 
 def bnn_mlp (config, X_train, y_train, X_test, y_test, lw_model):
+
+    np.random.seed(config['SEED'])
+    tf.random.set_seed(config['SEED'])
 
     nb_classes = len(config['CLASSES'])
     
@@ -74,7 +79,14 @@ def bnn_mlp (config, X_train, y_train, X_test, y_test, lw_model):
     
 
     # model.summary()
-    METRICS = ['accuracy']
+    if nb_classes==2:
+        # METRICS = ['accuracy','AUC']
+        # METRICS = [tfa.metrics.F1Score(num_classes=2, threshold=0.5), 'accuracy']
+        METRICS = [tfa.metrics.F1Score(num_classes=2, threshold=0.5)]
+        # METRICS = ['accuracy']
+    else:
+        METRICS = ['accuracy']
+    
     #METRICS = [keras.metrics.Precision(name='precision'), keras.metrics.Recall(name='recall'),]
     #METRICS = [keras.metrics.Recall(name='recall')]
     #METRICS = [tf.keras.metrics.MeanSquaredError()]
@@ -143,7 +155,13 @@ def bnn_mlp_augment (config, n_samples, input_shape, partition, labels):
     model.summary()
     
     opt = Adam(learning_rate=LR_START) 
-    model.compile(loss='squared_hinge', optimizer=opt, metrics=['acc'])
+    
+    if nb_classes==2:
+        metric = ['acc']
+    else:
+        metric = ['acc']
+        
+    model.compile(loss='squared_hinge', optimizer=opt, metrics=metric)
     
     lr_scheduler = LearningRateScheduler(lambda e: LR_START * LR_DECAY ** e)
     history = model.fit(training_generator,

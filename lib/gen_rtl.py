@@ -51,7 +51,7 @@ def gen_rtl (project_name, config, filename, coin):
     
     Path(full_path).mkdir(parents=True, exist_ok=True)
     
-    coin_model.export2verilog(full_path, X_test_lst[0:n_export,:], Y_test_pred[0:n_export], coin=coin, export_data=False)
+    coin_model.export2verilog(full_path, X_test_lst[0:n_export,:], Y_test_pred[0:n_export], coin=coin, export_data=True)
     coin_model.export2python(full_path, coin=coin)
     
     print( "\n\n--- Ensembles evaluation executed in %.02f seconds ---" % (time.time() - start_time))   

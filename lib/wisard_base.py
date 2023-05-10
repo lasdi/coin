@@ -169,25 +169,32 @@ def wisard_eval_bin_array (X, model, mapping, classes, address_size, thresholds=
 def wisard_eval_coin (X, model, mapping, classes, address_size, threshold=1, coin_weights='',n_minterms=0):
     n_samples = X.shape[0]
     X_mapped = X[:,mapping]
-    epsilon = 1e-6
-    # For Glorot correction
-    coin_h = np.float32(np.sqrt(1.5 / (n_minterms + len(classes))))
-    
-    # Tau values for thresholding as in FINN
-    tau = np.zeros((len(classes)))
-    tau_inv = np.ones((len(classes)))
-    for c in range (len(classes)):
-        gamma = coin_weights[1][c]; mov_mean = coin_weights[3][c]; mov_var = coin_weights[4][c]; beta = coin_weights[2][c];
-        tau[c] = mov_mean - (beta/(gamma/np.sqrt(mov_var)))
-        tau[c] = math.ceil(tau[c]/coin_h) # Glorot correction
-        # This correction is not needed. Here just to show the diff from original paper
-        # tau[c] = int((tau[c]+n_minterms)/2) 
-        if (gamma/np.sqrt(mov_var+epsilon))<0:
-            tau_inv[c] = -1
-            
-        # print("Tau[%d]: %d - Inv[%d]: %d" %(c, tau[c], c, tau_inv[c]))
-        
 
+    from tau_gen import tau_gen
+    tau = tau_gen (coin_weights, n_minterms, len(classes))    
+
+
+    # epsilon = 1e-6
+    # # For Glorot correction
+    # coin_h = np.float32(np.sqrt(1.5 / (n_minterms + len(classes))))
+    
+    # # Tau values for thresholding as in FINN
+    # tau = np.zeros((len(classes)))
+    # tau_inv = np.ones((len(classes)))
+    # for c in range (len(classes)):
+    #     gamma = coin_weights[1][c]; mov_mean = coin_weights[3][c]; mov_var = coin_weights[4][c]; beta = coin_weights[2][c];
+    #     tau[c] = mov_mean - (beta/(gamma/np.sqrt(mov_var)))
+    #     tau[c] = math.ceil(tau[c]/coin_h) # Glorot correction
+    #     # This correction is not needed. Here just to show the diff from original paper
+    #     # tau[c] = int((tau[c]+n_minterms)/2) 
+    #     if (gamma/np.sqrt(mov_var+epsilon))<0:
+    #         tau_inv[c] = -1
+            
+        
+    print('TAU VALUES:')
+    print(classes)
+    print(tau)
+    # print(tau_inv)
     Y_pred = []
     
     # Eval for each sample
@@ -209,7 +216,7 @@ def wisard_eval_coin (X, model, mapping, classes, address_size, threshold=1, coi
             
             # Batch normalization correction (thresholding as in FINN)
             scores[c] -= tau[c]
-            scores[c] *= tau_inv[c]
+            # scores[c] *= tau_inv[c]
         ############################################        
         
         best_class = np.argmax(scores)    
