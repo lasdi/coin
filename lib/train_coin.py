@@ -17,7 +17,7 @@ import time
 import datetime
 from bnn_mlp import bnn_mlp
 # from brevitas_bnn_mlp import bnn_mlp
-from keras.utils import np_utils
+from keras.utils import to_categorical
 # from sklearn.metrics import accuracy_score
 import pandas as pd
 # from load_config import load_config
@@ -67,7 +67,7 @@ def train_thread(m, config, filename,X_train_lst, Y_train, X_val_lst, Y_val, X_t
     model_coin, history = bnn_mlp(config, X_train_coin, Y_train, X_val_coin, Y_val, mWisard)
 
     # X_test_coin = mWisard.gen_coin_encode(X_test_lst)
-    Y_test_coin = np_utils.to_categorical(Y_test, len(CLASSES)) * 2 - 1
+    Y_test_coin = to_categorical(Y_test, len(CLASSES)) * 2 - 1
     
     # score = model_coin.evaluate(X_test_coin, Y_test_coin, verbose=0)
     # write2file('>>> coin Test score:', score[0])

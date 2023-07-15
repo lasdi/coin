@@ -33,7 +33,7 @@ N_VAL = 2000
 # Number of samples available for test.
 N_TEST = 10000
 # Address size of LogicWiSARD models.
-ADDRESS_SIZE = 12
+ADDRESS_SIZE = 16
 # Thermometer resolution, if this encoding is used
 THERMO_RESOLUTION = 2
 

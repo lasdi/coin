@@ -21,6 +21,33 @@ COIN is an improvement on LogicWiSARD networks [1](#publications). It consists o
 
 # Installation
 
+
+To run the COIN project, you need to follow these installation steps:
+
+## Install Conda
+
+Conda is a package and environment management system that allows you to easily install and manage software dependencies. Follow the instructions below to install Conda:
+
+### On Windows
+
+Visit the Conda website: [https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html](https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html)
+
+### On macOS
+
+Visit the Conda website: [https://docs.conda.io/projects/conda/en/latest/user-guide/install/macos.html](https://docs.conda.io/projects/conda/en/latest/user-guide/install/macos.html)
+
+### On Linux
+
+Visit the Conda website: [https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html)
+
+### Install requirements
+
+1. Create and activate a Conda environment
+2. Then, run the following command to install the dependencies using pip (Python package installer):
+```
+pip install -r requirements.txt
+```
+
 # Usage
 
 ## Training
@@ -37,8 +64,8 @@ python ./run_single.py
 This generates a LogicWiSARD model which afterwards is modified and trained as a COIN model. All the results are placed in the `coin/mnist/out` folder.
 The configuration script `config.py` can be modified to produce the desired results.
 
-This example trains a COIN model using address size of 16 and thermometer resolution of 2 trained for 5 epoches.
-This humble configuration aims to cope with limited memory machines (8GB or less) and achives above 96% accuracy. If you have enough memory and/or a GPU, change the thermometer resolution and the number of epoches on the configuration script to increase accuracy.
+This example trains a COIN model using address size of 16, thermometer resolution of 2, and 5 backpropagation epoches.
+This humble configuration aims to cope with limited memory machines (8GB or less) and achives an accuracy in 95%-96% range. If you have enough memory and/or a GPU, change the thermometer resolution and the number of epoches on the configuration script to increase accuracy.
 
 
 ## RTL generation
@@ -99,3 +126,14 @@ adapted to new datasets or classification problems.
 
 # Collaborators
 
+- Igor D. S. Miranda
+- Aman Arora
+- Zachary Susskind
+- Josias S. A. Souza
+- Mugdha P. Jadhao
+- Luis A. Q. Villon
+- Diego L. C. Dutra
+- Priscila M. V. Lima
+- Felipe M. G. França
+- Mauricio Breternitz Jr.
+- Lizy K. John

@@ -18,7 +18,7 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, Activation, BatchNormalization, Flatten
 from tensorflow.keras.optimizers import SGD, Adam, RMSprop
 from keras.callbacks import LearningRateScheduler
-from keras.utils import np_utils
+from keras.utils import to_categorical
 import tensorflow_addons as tfa
 
 from bnn_ops import binary_tanh as binary_tanh_op
@@ -66,8 +66,8 @@ def bnn_mlp (config, X_train, y_train, X_test, y_test, lw_model):
     
     
     # convert class vectors to binary class matrices
-    Y_train = np_utils.to_categorical(y_train, nb_classes) * 2 - 1 # -1 or 1 for hinge loss
-    Y_test = np_utils.to_categorical(y_test, nb_classes) * 2 - 1
+    Y_train = to_categorical(y_train, nb_classes) * 2 - 1 # -1 or 1 for hinge loss
+    Y_test = to_categorical(y_test, nb_classes) * 2 - 1
     
     model = Sequential()
     model.add(DropoutNoScale(DROP_IN, input_shape=(X_train.shape[1],), name='drop0'))
@@ -141,8 +141,8 @@ def bnn_mlp_augment (config, n_samples, input_shape, partition, labels):
     validation_generator = DataGenerator(partition['validation'], labels, **params)   
     
     # convert class vectors to binary class matrices
-    # Y_train = np_utils.to_categorical(y_train, nb_classes) * 2 - 1 # -1 or 1 for hinge loss
-    # Y_test = np_utils.to_categorical(y_test, nb_classes) * 2 - 1
+    # Y_train = to_categorical(y_train, nb_classes) * 2 - 1 # -1 or 1 for hinge loss
+    # Y_test = to_categorical(y_test, nb_classes) * 2 - 1
     
     model = Sequential()
     model.add(DropoutNoScale(DROP_IN, input_shape=(input_shape,), name='drop0'))

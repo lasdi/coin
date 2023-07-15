@@ -65,8 +65,11 @@ def eval_imbalanced(y_test, y_score, classes, do_plot=True):
     accuracy = accuracy_score(y_test, y_score)
     print('> Accuracy: %.02f%%' % (accuracy*100))
 
-    auc = roc_auc_score(y_test, y_score)
-    print('> auc: %.04f%%' % (auc))    
+    if len(classes)==2:
+        auc = roc_auc_score(y_test, y_score)
+        print('> auc: %.04f%%' % (auc))    
+    else:
+        auc = 0
     
 
     if do_plot==True:        
