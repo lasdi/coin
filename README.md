@@ -1,5 +1,5 @@
-# COIN
-COmbinational Intelligent Networks
+<img src=./coin.svg width=300 />
+# COmbinational Intelligent Networks
 
 # Usage
 

@@ -90,11 +90,11 @@ initial begin
    repeat(10) @(negedge clk);
    repeat (N_INPUTS) begin
       // Wait for the output
-      while (source_valid==0) @(negedge clk);
-      repeat(1) @(negedge clk);
+      while (source_valid!==1'b1) @(negedge clk);
       $fwrite(fd_o,"%01d\n",predicted_class);
+      repeat(1) @(negedge clk);
    end
-   $fclose(fd_o); 
+   $fclose(fd_o);
 end
 
 
