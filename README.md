@@ -1,5 +1,16 @@
 <img src=./coin.png width=300 />
+
 COmbinational Intelligent Networks
+==================================
+
+COIN is a new approach to the training of weightless neural networks (WNNs) using the BNN framework.
+It is designed to be efficient for ASIC, FPGA, and eFPGA implementations with the following advantages:
+
+- WNN training using backpropagation.
+- Enhanced model accuracy and energy efficiency.
+- Implementation using only logic functions.
+- Efficient hardware implementations.
+- This open-source tool chain to automatically generate COIN models from training to RTL.
 
 # Usage
 
