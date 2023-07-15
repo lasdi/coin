@@ -126,14 +126,22 @@ adapted to new datasets or classification problems.
 
 # Collaborators
 
-- Igor D. S. Miranda
-- Aman Arora
-- Zachary Susskind
-- Josias S. A. Souza
-- Mugdha P. Jadhao
-- Luis A. Q. Villon
-- Diego L. C. Dutra
-- Priscila M. V. Lima
-- Felipe M. G. França
-- Mauricio Breternitz Jr.
-- Lizy K. John
+- Igor D. S. Miranda <sup>1</sup> (igordantas@ufrb.edu.br / www.igormiranda.org)
+- Aman Arora <sup>2</sup>
+- Zachary Susskind <sup>2</sup>
+- Josias S. A. Souza <sup>1</sup>
+- Mugdha P. Jadhao <sup>2</sup>
+- Luis A. Q. Villon <sup>3</sup>
+- Diego L. C. Dutra <sup>3</sup>
+- Priscila M. V. Lima <sup>3</sup>
+- Felipe M. G. França <sup>4</sup>
+- Mauricio Breternitz Jr. <sup>5</sup>
+- Lizy K. John <sup>2</sup>
+
+# Institutions
+
+1. Universidade Federal do Recôncavo da Bahia, Brazil.
+2. University of Texas at Austin, USA.
+3. Universidade Federal do Rio de Janeiro, Brazil.
+4. Instituto de Telecomunicações, Portugal.
+5. ISCTE Instituto Universitário de Lisboa, ISTAR, Portugal.
